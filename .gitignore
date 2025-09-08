@@ -1,0 +1,61 @@
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+/.idea/
+*.iml
+*.ipr
+*.iws
+*.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build
+/build/
+
+# Dependency directories
+/node_modules/
+
+# Environment
+.env
+
+# Others
+*.class
+*.jar
+*.war
+*.ear
+
+# Test output
+/surefire-reports/
+
+# Application properties (optional, uncomment if you want to exclude local config)
+# src/main/resources/application-local.properties
+
+# Flyway
+/db/migration/*.sql~
+
+# Misc
+*.swp
+*.swo
+
+# Exclude generated sources
+/target/generated-sources/
+/target/generated-test-sources/
+
+# Exclude backup files
+*~
+
+# Exclude personal files
+*.bak
+
+# Exclude coverage reports
+/coverage/
+
+# Exclude bin
+/bin/
