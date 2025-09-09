@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title th:utext="${pageTitle} ?: 'My App'">My App</title>
 
-    <!-- example CSS -->
-    <link rel="stylesheet" th:href="@{/css/main.css}" />
+    <th:block th:each="cssFile : ${css}">
+        <link rel="stylesheet" th:href="@{${cssFile.asText()}}" />
+    </th:block>
 </head>
 <body id="react-mount">
 
