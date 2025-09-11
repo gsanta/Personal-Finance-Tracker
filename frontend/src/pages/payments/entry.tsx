@@ -1,6 +1,3 @@
-import PaymentsPage from "./PaymentsPage";
-import { renderPageComponent } from '@/utils/reactPage'
+import PaymentsPage from './PaymentsPage';
 
-
-renderPageComponent(PaymentsPage);
-// export default PaymentsPage
+export default PaymentsPage;

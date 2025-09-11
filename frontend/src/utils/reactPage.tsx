@@ -2,10 +2,8 @@ import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '../index.css';
-import camelCaseKeys from './camelCaseKeys';
-
-// import { Layout } from '../components/page/Layout';
-// import { camelCaseKeys } from './changeCase';
+import { camelCaseKeys } from './transformKeys';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 type ReactComponent = Parameters<typeof createElement>[0];
 
@@ -15,11 +13,14 @@ declare global {
   }
 }
 
+const queryClient = new QueryClient();
+
 export function renderPageComponent(Page: ReactComponent): void {
+  const camelizedProps = camelCaseKeys(window.pageProps);
   const page = (
-    <div data-theme="finance-tracker-dark">
-      <Page {...camelCaseKeys(window.pageProps)} />
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <Page {...camelizedProps} />
+    </QueryClientProvider>
   );
 
   const root = createRoot(document.getElementById('react-mount')!);
