@@ -24,6 +24,10 @@ export default defineConfig([
         ecmaFeatures: { jsx: true },
         project: true,
       },
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+      },
     },
     rules: {
       ...js.configs.recommended.rules,
