@@ -9,13 +9,15 @@
         <link rel="stylesheet" th:href="@{${cssFile.asText()}}" />
     </th:block>
 </head>
-<body id="react-mount">
+<body id="react-mount" data-theme="finance-tracker-dark">
 
 <!-- Serialize server model into window.pageProps as JSON -->
-<!--<script th:inline="javascript">-->
-<!--    var currentUrl = /*[[${currentUrl}]]*/ "";-->
-<!--    console.log(currentUrl)-->
-<!--</script>-->
+<script th:inline="javascript">
+        /*<![CDATA[*/
+        window.pageProps = [[${ pageProps }]];
+        /*]]>*/
+</script>
+
 
 <th:block th:each="jsFile : ${js}">
     <script th:src="@{${jsFile.asText()}}"></script>
