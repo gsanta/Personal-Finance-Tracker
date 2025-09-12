@@ -2,7 +2,7 @@ import useIsMobile from '@/hooks/useIsMobile';
 import { Payments } from '../hooks/useGetPayments';
 import { BiTrash } from 'react-icons/bi';
 import { useMemo, useState } from 'react';
-import Payment from '../types/Payment';
+import Payment, { categoryMap } from '../types/Payment';
 import DeletePaymentConfirmDialog from './DeletePaymentConfirmDialog';
 
 type PaymentsTableProps = {
@@ -58,7 +58,9 @@ const PaymentsTable = ({ payments, page, setPage, refetchPayments }: PaymentsTab
               <tr key={payment.id}>
                 <td className="flex flex-col">
                   {payment.name}
-                  <span className="text-secondary font-bold text-sm">{payment.category}</span>
+                  {payment.category && (
+                    <span className="text-secondary font-bold text-sm">{categoryMap[payment.category]}</span>
+                  )}
                 </td>
                 <td>{payment.amount}</td>
                 <td>

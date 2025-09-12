@@ -1,5 +1,3 @@
-import { api, paymentsPath } from '@/utils/apiRoutes';
-import { useMutation } from '@tanstack/react-query';
 import { UseFormRegister } from 'react-hook-form';
 
 type NewPaymentFormProps = {
@@ -7,6 +5,7 @@ type NewPaymentFormProps = {
     name: string;
     amount: number;
     isIncome: boolean;
+    category?: string;
   }>;
 };
 
@@ -24,6 +23,17 @@ const NewPaymentForm = ({ register }: NewPaymentFormProps) => {
           Amount
           <input type="number" className="grow" placeholder="The amount payed" {...register('amount')} />
         </label>
+
+        <select className="select select-primary w-full max-w-xs" {...register('category')}>
+          <option selected>No category</option>
+          <option value="food">Food</option>
+          <option value="fun">Fun</option>
+          <option value="health">Health</option>
+          <option value="main_income">Main income</option>
+          <option value="other_income">Other income</option>
+          <option value="utilities">Utilities</option>
+        </select>
+
         <div className="form-control">
           <label className="label cursor-pointer justify-start gap-4">
             <input type="checkbox" {...register('isIncome')} className="checkbox" />

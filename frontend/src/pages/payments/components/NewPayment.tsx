@@ -6,7 +6,6 @@ import Payment from '../types/Payment';
 import useIsMobile from '@/hooks/useIsMobile';
 import { BiCheck } from 'react-icons/bi';
 import { useState } from 'react';
-import { set } from 'lodash';
 
 type PaymentRequest = Pick<Payment, 'name' | 'amount' | 'isIncome'>;
 
@@ -62,7 +61,7 @@ const NewPayment = ({ refetchPayments }: NewPaymentProps) => {
 
   return isMobile ? (
     <dialog id="new-payment-dialog" className="modal">
-      <form className="modal-box bg-base-100" onSubmit={onSubmit}>
+      <form className="modal-box bg-base-100 border-color border-primary border" onSubmit={onSubmit}>
         {form}
         <div className="modal-action">
           <button className="btn" onClick={onClose}>
