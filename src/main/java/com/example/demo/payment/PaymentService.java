@@ -25,10 +25,10 @@ public class PaymentService {
         return repo.findById(id);
     }
 
-//    @Transactional
-//    public Product create(Product p) {
-//        return repo.save(p);
-//    }
+    @Transactional
+    public Payment create(Payment p) {
+        return repo.save(p);
+    }
 //
 //    @Transactional
 //    public Product update(UUID id, Product changes) {
