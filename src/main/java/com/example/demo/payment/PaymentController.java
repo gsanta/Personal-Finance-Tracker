@@ -40,11 +40,4 @@ public class PaymentController {
 
         return "application";
     }
-
-    @GetMapping("/{id}")
-    public String get(@PathVariable Long id, Model model) {
-        Payment p = svc.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        model.addAttribute("product", p);
-        return "application";
-    }
 }

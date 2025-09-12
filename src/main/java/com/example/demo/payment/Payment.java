@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 @Entity
-@Table(name = "financial_transaction")
+@Table(name = "payments")
 public class Payment {
 
     @Id
@@ -21,6 +21,9 @@ public class Payment {
 
     @Column(name = "is_income")
     private Boolean isIncome;
+
+    @Column(name = "category")
+    private String category;
 
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
@@ -64,6 +67,14 @@ public class Payment {
 
     public void setIsIncome(Boolean isIncome) {
         this.isIncome = isIncome;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public Timestamp getCreatedAt() {

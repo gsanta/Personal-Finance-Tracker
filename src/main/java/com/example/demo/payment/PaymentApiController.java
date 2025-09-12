@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 public class PaymentApiController {
@@ -28,5 +29,10 @@ public class PaymentApiController {
     @PostMapping("/api/payments")
     public void create(@RequestBody Payment payment) {
         svc.create(payment);
+    }
+
+    @DeleteMapping("/api/payments/{id}")
+    public void delete(@PathVariable UUID id) {
+        svc.delete(id);
     }
 }

@@ -43,3 +43,7 @@ export const pathWithConfig = (path: string, config?: Config): string => {
 export const paymentsPath = (config?: Config): string => {
   return pathWithConfig('/api/payments', config);
 };
+
+export const paymentPath = (id: string | number, config?: Config): string => {
+  return pathWithConfig(`/api/payments/${id}`, config);
+};

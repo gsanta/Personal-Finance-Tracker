@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
@@ -18,31 +19,17 @@ public class PaymentService {
     }
 
     public Page<Payment> listAll(Pageable pageable) {
-        return repo.findAll(pageable);
+        return repo.findAllByOrderByCreatedAtDesc(pageable);
     }
 
-    public Optional<Payment> findById(Long id) {
-        return repo.findById(id);
-    }
 
     @Transactional
     public Payment create(Payment p) {
         return repo.save(p);
     }
-//
-//    @Transactional
-//    public Product update(UUID id, Product changes) {
-//        Product existing = repo.findById(id).orElseThrow();
-//        existing.setName(changes.getName());
-//        existing.setDescription(changes.getDescription());
-//        existing.setQuantity(changes.getQuantity());
-//        existing.setPrice(changes.getPrice());
-//        existing.setImgUrl(changes.getImgUrl());
-//        return repo.save(existing);
-//    }
-//
-//    @Transactional
-//    public void delete(Long id) {
-//        repo.deleteById(id);
-//    }
+        
+    @Transactional
+    public void delete(UUID id) {
+        repo.deleteById(id);
+    }
 }
