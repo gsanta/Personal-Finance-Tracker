@@ -99,7 +99,7 @@ module.exports = (_env, argv) => {
       hot: true,
       headers: { 'Access-Control-Allow-Origin': '*' },
       static: false,
-      allowedHosts: ['localhost', '127.0.0.1'],
+      allowedHosts: ['frontend', 'localhost', '127.0.0.1'],
       client: {
         overlay: { runtimeErrors: false },
       },

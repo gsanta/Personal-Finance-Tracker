@@ -10,5 +10,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
       - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+  app:
+    image: openjdk:21-jdk
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "3012:3012"
+    depends_on:
+      - postgres
+    volumes:
+      - ./target/demo-0.0.1-SNAPSHOT.jar:/app/demo.jar
+    working_dir: /app
+    command: ["java", "-jar", "demo.jar"]
+  frontend:
+    image: node:20.11.1
+    working_dir: /frontend
+    volumes:
+      - .:/frontend
+    ports:
+      - "3013:3013"
+    command: /bin/sh -c "npm install && npm run dev"
 volumes:
   postgres_data:
