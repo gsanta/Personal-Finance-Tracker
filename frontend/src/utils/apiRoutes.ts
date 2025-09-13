@@ -47,3 +47,11 @@ export const paymentsPath = (config?: Config): string => {
 export const paymentPath = (id: string | number, config?: Config): string => {
   return pathWithConfig(`/api/payments/${id}`, config);
 };
+
+export const categorySummaryPath = (config?: Config): string => {
+  return pathWithConfig('/api/summary/category', config);
+};
+
+export const monthlySummaryPath = (config?: Config): string => {
+  return pathWithConfig('/api/summary/monthly', config);
+};

@@ -16,14 +16,13 @@ public class PaymentApiController {
     public PaymentApiController(PaymentService svc) { this.svc = svc; }
 
     @GetMapping("/api/payments")
-    public PaymentsPresenter sayHello(@RequestParam(defaultValue = "0") int page,
+    public PaymentsPresenter listPayments(@RequestParam(defaultValue = "1") int page,
                            @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page - 1, size);
         Page<Payment> paymentsPage = svc.listAll(pageable);
-        PaymentsPresenter payments = new PaymentsPresenter(paymentsPage);
 
-        return payments;
+        return new PaymentsPresenter(paymentsPage);
     }
 
     @PostMapping("/api/payments")

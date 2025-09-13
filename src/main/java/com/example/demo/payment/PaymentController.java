@@ -25,11 +25,11 @@ public class PaymentController {
     public PaymentController(PaymentService svc) { this.svc = svc; }
 
     @GetMapping
-    public String list(@RequestParam(defaultValue = "0") int page,
+    public String list(@RequestParam(defaultValue = "1") int page,
                         @RequestParam(defaultValue = "10") int size,
                         Model model) throws JsonProcessingException {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page - 1, size);
         Page<Payment> paymentsPage = svc.listAll(pageable);
         PaymentsPresenter payments = new PaymentsPresenter(paymentsPage);
 

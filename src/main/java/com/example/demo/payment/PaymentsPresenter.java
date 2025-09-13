@@ -12,6 +12,11 @@ public class PaymentsPresenter {
 
     private final List<Payment> items;
 
+    public PaymentsPresenter() {
+        this.totalCount = 0;
+        this.items = List.of();
+    }
+
     public PaymentsPresenter(Page<Payment> paymentsPage) {
         this.totalCount = paymentsPage.getTotalElements();
         this.items = paymentsPage.getContent();

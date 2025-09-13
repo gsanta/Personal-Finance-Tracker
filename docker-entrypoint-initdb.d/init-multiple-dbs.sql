@@ -1,0 +1,1 @@
+CREATE DATABASE finance_tracker_db_test;
