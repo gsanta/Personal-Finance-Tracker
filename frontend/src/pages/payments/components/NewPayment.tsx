@@ -19,6 +19,7 @@ const NewPayment = ({ refetchPayments }: NewPaymentProps) => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const {
+    formState: { isValid },
     register,
     handleSubmit,
     reset: resetForm,
@@ -59,6 +60,17 @@ const NewPayment = ({ refetchPayments }: NewPaymentProps) => {
 
   const form = <NewPaymentForm register={register} />;
 
+  const saveButton = (
+    <button
+      className={`btn ${isSuccess ? 'btn-success' : 'bg-neutral'} ${isValid ? '' : 'btn-disabled'}`}
+      type="submit"
+    >
+      {isPending && <span className="loading loading-spinner"></span>}
+      {isSuccess && <BiCheck size={24} />}
+      {!isPending && !isSuccess && 'Save'}
+    </button>
+  );
+
   return isMobile ? (
     <dialog id="new-payment-dialog" className="modal">
       <form className="modal-box bg-base-100 border-color border-primary border" onSubmit={onSubmit}>
@@ -67,9 +79,7 @@ const NewPayment = ({ refetchPayments }: NewPaymentProps) => {
           <button className="btn" onClick={onClose}>
             Close
           </button>
-          <button className="btn bg-neutral" type="submit">
-            {isPending ? <span className="loading loading-spinner"></span> : 'Save'}
-          </button>
+          {saveButton}
         </div>
       </form>
     </dialog>
@@ -80,11 +90,7 @@ const NewPayment = ({ refetchPayments }: NewPaymentProps) => {
         <button className="btn" onClick={onClose}>
           Clear
         </button>
-        <button className={`btn ${isSuccess ? 'btn-success' : 'bg-neutral'}`} type="submit">
-          {isPending && <span className="loading loading-spinner"></span>}
-          {isSuccess && <BiCheck size={24} />}
-          {!isPending && !isSuccess && 'Save'}
-        </button>
+        {saveButton}
       </div>
     </form>
   );

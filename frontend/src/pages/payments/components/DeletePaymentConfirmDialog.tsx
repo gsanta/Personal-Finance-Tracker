@@ -25,7 +25,7 @@ const DeletePaymentConfirmDialog = ({ item, refetchPayments }: DeletePaymentConf
 
   return (
     <dialog id="delete-payment-dialog" className="modal">
-      <div className="modal-box bg-base-100">
+      <div className="modal-box bg-base-100 border-color border-primary border">
         <h3 className="font-bold text-lg">Delete transaction</h3>
         <div className="divider"></div>
         <div>

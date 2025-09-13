@@ -17,6 +17,8 @@ const ITEMS_PER_PAGE = 10;
 const PaymentsTable = ({ payments, page, setPage, refetchPayments }: PaymentsTableProps) => {
   const isMobile = useIsMobile();
 
+  const currentPage = page || 1;
+
   const [payment, setSelectedPayment] = useState<Payment | null>(null);
 
   const handleDelete = (payment: Payment) => {
@@ -62,7 +64,7 @@ const PaymentsTable = ({ payments, page, setPage, refetchPayments }: PaymentsTab
                     <span className="text-secondary font-bold text-sm">{categoryMap[payment.category]}</span>
                   )}
                 </td>
-                <td>{payment.amount}</td>
+                <td>{payment.isIncome ? payment.amount : -payment.amount}</td>
                 <td>
                   {formattedDate}
                   <br />
@@ -83,7 +85,7 @@ const PaymentsTable = ({ payments, page, setPage, refetchPayments }: PaymentsTab
           {Array.from({ length: pages }, (_, i) => (
             <button
               key={i}
-              className={`join-item btn ${i === Number(page) - 1 ? 'btn-primary' : ''}`}
+              className={`join-item btn ${i === currentPage - 1 ? 'btn-primary' : ''}`}
               onClick={() => setPage(i + 1)}
             >
               {i + 1}

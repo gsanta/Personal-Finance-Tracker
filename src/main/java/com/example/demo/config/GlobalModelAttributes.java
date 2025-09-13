@@ -1,6 +1,5 @@
 package com.example.demo.config;
 
-import com.example.demo.ManifestClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;

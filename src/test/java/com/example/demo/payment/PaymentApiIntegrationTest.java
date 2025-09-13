@@ -1,10 +1,11 @@
 package com.example.demo.payment;
 
-import com.example.demo.ManifestClient;
+import com.example.demo.config.ManifestClient;
+import com.example.demo.payment.presenter.PaymentsPresenter;
+import com.example.demo.payment.service.Payment;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

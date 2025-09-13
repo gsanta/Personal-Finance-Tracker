@@ -19,7 +19,7 @@ const useGetPayments = ({ page, initialPayments }: UseGetPaymentsProps) => {
     queryFn: async () => {
       const data = await api.get(
         paymentsPath({
-          params: { page: page ? Number(page) - 1 : 0 },
+          params: { page: page ? Number(page) : 1 },
         }),
       );
       return data;
