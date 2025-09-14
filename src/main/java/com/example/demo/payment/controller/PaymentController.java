@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@RequestMapping({"/", "/payments"})
 public class PaymentController {
     private final PaymentService svc;
 
@@ -25,7 +24,12 @@ public class PaymentController {
 
     public PaymentController(PaymentService svc) { this.svc = svc; }
 
-    @GetMapping
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/payments";
+    }
+
+    @GetMapping("/payments")
     public String list(@RequestParam(defaultValue = "1") int page,
                         @RequestParam(defaultValue = "10") int size,
                         Model model) throws JsonProcessingException {

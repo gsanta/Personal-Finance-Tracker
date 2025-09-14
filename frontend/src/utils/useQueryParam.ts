@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const getQuery = () => {
   if (typeof window !== 'undefined') {
@@ -14,6 +14,15 @@ const getQueryStringVal = (key: string): string | null => {
 const useQueryParam = (key: string, defaultVal: string): [string, (val: string) => void] => {
   const [query, setQuery] = useState(getQueryStringVal(key) || defaultVal);
 
+  useEffect(() => {
+    const onPopState = () => {
+      setQuery(getQueryStringVal(key) || defaultVal);
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [key, defaultVal]);
+
   const updateUrl = (newVal: string) => {
     setQuery(newVal);
 
@@ -25,12 +34,9 @@ const useQueryParam = (key: string, defaultVal: string): [string, (val: string) 
       query.delete(key);
     }
 
-    // This check is necessary if using the hook with Gatsby
-    if (typeof window !== 'undefined') {
-      const { protocol, pathname, host } = window.location;
-      const newUrl = `${protocol}//${host}${pathname}?${query.toString()}`;
-      window.history.pushState({}, '', newUrl);
-    }
+    const { protocol, pathname, host } = window.location;
+    const newUrl = `${protocol}//${host}${pathname}?${query.toString()}`;
+    window.history.pushState({}, '', newUrl);
   };
 
   return [query, updateUrl];

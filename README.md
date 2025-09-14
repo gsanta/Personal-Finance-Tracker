@@ -12,8 +12,9 @@ This project uses Docker Compose to set up all required services (backend, front
    ```
 
 This will start all services defined in `docker-compose.yml`.
+It might take a while for the fronted to start at the first time.
 
-3. open the application on http://localhost:3012/payments
+3. open the application on http://localhost:3012
 
 - The backend (Spring Boot) will be available on port 3012.
 - The frontend will be started on port 3013.
