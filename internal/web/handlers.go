@@ -3,7 +3,6 @@ package web
 import (
 	"encoding/json"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,7 +17,7 @@ var (
 	manifestClient *ManifestClient
 )
 
-func loadTemplates() {
+func LoadTemplates() {
 	tpl = template.Must(template.New("").Funcs(template.FuncMap{
 		"toJson": func(v interface{}) template.JS {
 			b, _ := json.Marshal(v)
@@ -27,29 +26,11 @@ func loadTemplates() {
 	}).ParseGlob(filepath.Join("internal", "web", "templates", "*.html")))
 }
 
-func PaymentsHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("[PaymentsHandler] %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
-	tplOnce.Do(loadTemplates)
-	if manifestClient == nil {
-		manifestClient = NewManifestClient(os.Getenv("MANIFEST_HOST"))
-	}
-	pageProps := map[string]interface{}{
-		"Title": "Home",
-		"Now":   time.Now(),
-		"User": map[string]interface{}{
-			"name": "Alice",
-			"id":   123,
-		},
-	}
-
-	uri := r.RequestURI
-	formattedUri := strings.ReplaceAll(uri, "-", "_")
-	entry := "pages" + formattedUri + "/entry"
-
+func RenderPage(w http.ResponseWriter, manifestClient *ManifestClient, entry string, pageProps interface{}) {
 	jsFiles := manifestClient.JS(entry)
 	cssFiles := manifestClient.CSS(entry)
 	data := map[string]interface{}{
-		"PageProps": pageProps,
+		"PageProps": template.JS(mustJSON(pageProps)),
 		"JSFiles":   jsFiles,
 		"CSSFiles":  cssFiles,
 	}
@@ -59,8 +40,16 @@ func PaymentsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func mustJSON(v interface{}) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
 func SummariesHandler(w http.ResponseWriter, r *http.Request) {
-	tplOnce.Do(loadTemplates)
+	tplOnce.Do(LoadTemplates)
 	if manifestClient == nil {
 		manifestClient = NewManifestClient(os.Getenv("MANIFEST_HOST"))
 	}
@@ -77,7 +66,7 @@ func SummariesHandler(w http.ResponseWriter, r *http.Request) {
 	jsFiles := manifestClient.JS(entry)
 	cssFiles := manifestClient.CSS(entry)
 	data := map[string]interface{}{
-		"PageProps": pageProps,
+		"PageProps": template.JS(mustJSON(pageProps)),
 		"JSFiles":   jsFiles,
 		"CSSFiles":  cssFiles,
 	}

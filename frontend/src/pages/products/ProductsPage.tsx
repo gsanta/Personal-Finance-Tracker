@@ -5,16 +5,16 @@ import PaymentsTable from './components/PaymentsTable';
 import useQueryParam from '@/utils/useQueryParam';
 import Page from '@/components/Page';
 
-type PaymentsPageProps = {
+type ProductsPageProps = {
   payments: Payments;
 };
 
-const PaymentsPage = ({ payments: initialPayments }: PaymentsPageProps) => {
+const ProductsPage = ({ payments: initialPayments }: ProductsPageProps) => {
   const isMobile = useIsMobile();
 
-  const [page, setPage] = useQueryParam('page', '');
+  // const [page, setPage] = useQueryParam('page', '');
 
-  const { payments, refetchPayments } = useGetPayments({ page, initialPayments });
+  // const { payments, refetchPayments } = useGetPayments({ page, initialPayments });
 
   return (
     <Page>
@@ -34,20 +34,20 @@ const PaymentsPage = ({ payments: initialPayments }: PaymentsPageProps) => {
                 )}
               </div>
               <div className="divider"></div>
-              <PaymentsTable
+              {/* <PaymentsTable
                 payments={payments}
                 page={Number(page)}
                 refetchPayments={refetchPayments}
                 setPage={(newPage: number) => setPage(String(newPage))}
-              />
+              /> */}
             </div>
           </div>
 
-          <NewPayment refetchPayments={refetchPayments} />
+          {/* <NewPayment refetchPayments={refetchPayments} /> */}
         </div>
       </div>
     </Page>
   );
 };
 
-export default PaymentsPage;
+export default ProductsPage;

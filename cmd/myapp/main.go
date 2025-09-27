@@ -8,9 +8,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
-	"github.com/joho/godotenv"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
+	handlers "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 
 	// routes
-	r.Get("/payments", web.PaymentsHandler)
+	r.Get("/products", handlers.ProductsHandler)
 	r.Get("/summaries", web.SummariesHandler)
 	r.Get("/api/status", web.StatusHandler)   // JSON
 	r.Post("/api/do_async", web.AsyncHandler) // JSON API

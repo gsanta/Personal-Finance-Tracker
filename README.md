@@ -72,3 +72,20 @@ Then run:
 - The application uses environment-specific configuration for service URLs and database connections.
 - Seed data and migrations are managed via Flyway and SQL scripts.
 - For more details, see the source code and configuration files.
+
+
+# Go
+
+## Database
+
+Run migration
+
+```sh
+migrate -path db/migrations -database "postgres://test-user:test-pw@localhost:6501/cat_db?sslmode=disable" up
+```
+
+Run seed file
+
+```sh
+psql "postgres://test-user:test-pw@localhost:6501/cat_db?sslmode=disable" -f db/seed/data-dev.sql
+```

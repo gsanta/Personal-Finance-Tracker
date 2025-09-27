@@ -8,10 +8,10 @@
   {{end}}
 </head>
 
-<body>
-  <h1>Welcome!</h1>
+<body data-theme="finance-tracker-dark">
+  <div id="react-mount"></div>
   <script>
-    window.pageProps = JSON.parse('{{ .PagePropsJSON }}');
+    window.pageProps = {{ .PageProps }};
   </script>
   {{range .JSFiles}}
   <script src="{{.}}"></script>
