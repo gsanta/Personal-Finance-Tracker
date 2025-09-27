@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,6 +28,7 @@ func loadTemplates() {
 }
 
 func PaymentsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("[PaymentsHandler] %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 	tplOnce.Do(loadTemplates)
 	if manifestClient == nil {
 		manifestClient = NewManifestClient(os.Getenv("MANIFEST_HOST"))

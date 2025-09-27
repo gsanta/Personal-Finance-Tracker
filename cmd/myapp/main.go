@@ -9,9 +9,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
+	"github.com/joho/godotenv"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found or error loading .env")
+	}
+	db.Init()
+
 	r := chi.NewRouter()
 
 	// middlewares
@@ -31,9 +39,13 @@ func main() {
 	r.Get("/api/status", web.StatusHandler)   // JSON
 	r.Post("/api/do_async", web.AsyncHandler) // JSON API
 
-	addr := ":" + getEnv("PORT", "8080")
-	log.Printf("listening on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, r))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3012"
+	}
+
+	log.Printf("listening on %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }
 
 func getEnv(k, d string) string {

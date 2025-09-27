@@ -3,6 +3,9 @@
 
 <head>
   <title>Home</title>
+  {{range .CSSFiles}}
+  <link rel="stylesheet" href="{{.}}">
+  {{end}}
 </head>
 
 <body>
@@ -10,6 +13,9 @@
   <script>
     window.pageProps = JSON.parse('{{ .PagePropsJSON }}');
   </script>
+  {{range .JSFiles}}
+  <script src="{{.}}"></script>
+  {{end}}
 </body>
 
 </html>
