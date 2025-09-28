@@ -1,24 +1,24 @@
-import { api, paymentsPath } from '@/utils/apiRoutes';
+import { api, productsPath } from '@/utils/apiRoutes';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosResponse } from 'axios';
-import Payment from '../types/Payment';
+import Product from '../types/Payment';
 
-export type Payments = {
+export type Products = {
   totalCount: number;
-  items: Payment[];
+  items: Product[];
 };
 
 type UseGetPaymentsProps = {
   page: string;
-  initialPayments: Payments;
+  initialPayments: Products;
 };
 
-const useGetPayments = ({ page, initialPayments }: UseGetPaymentsProps) => {
-  const { data: payments, refetch: refetchPayments } = useQuery<AxiosResponse<Payments>, unknown, Payments>({
-    queryKey: ['payments', page],
+const useGetProducts = ({ page, initialPayments }: UseGetPaymentsProps) => {
+  const { data: payments, refetch: refetchPayments } = useQuery<AxiosResponse<Products>, unknown, Products>({
+    queryKey: ['products', page],
     queryFn: async () => {
       const data = await api.get(
-        paymentsPath({
+        productsPath({
           params: { page: page ? Number(page) : 1 },
         }),
       );
@@ -26,7 +26,7 @@ const useGetPayments = ({ page, initialPayments }: UseGetPaymentsProps) => {
     },
     initialData: {
       data: initialPayments,
-    } as AxiosResponse<Payments>,
+    } as AxiosResponse<Products>,
     select: (response) => response.data,
     // staleTime: 2000,
   });
@@ -37,4 +37,4 @@ const useGetPayments = ({ page, initialPayments }: UseGetPaymentsProps) => {
   };
 };
 
-export default useGetPayments;
+export default useGetProducts;

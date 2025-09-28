@@ -1,21 +1,14 @@
-package web
+package api
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web/presenters"
 )
 
-var (
-	tplOnce sync.Once
-)
-
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
-	tplOnce.Do(web.LoadTemplates)
-
 	page, itemsPerPage := web.ParsePaginationParams(r)
 
 	products, total, err := db.GetAllProducts(db.DB, page, itemsPerPage)
@@ -34,9 +27,6 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		Items:      presentedProducts,
 		TotalCount: total,
 	}
-	pageProps := map[string]interface{}{
-		"products": productsPresenter,
-	}
 
-	web.RenderPage(w, r, pageProps)
+	web.WriteJSON(w, http.StatusAccepted, productsPresenter)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 	handlers "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers"
+	api "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers/api"
 	"github.com/joho/godotenv"
 )
 
@@ -37,8 +38,8 @@ func main() {
 	// routes
 	r.Get("/products", handlers.ProductsHandler)
 	r.Get("/summaries", web.SummariesHandler)
-	r.Get("/api/status", web.StatusHandler)   // JSON
-	r.Post("/api/do_async", web.AsyncHandler) // JSON API
+	r.Get("/api/products", api.ProductsHandler) // JSON
+	//r.Post("/api/do_async", web.AsyncHandler)   // JSON API
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -7,13 +7,11 @@ export const categoryMap = {
   utilities: 'Utilities',
 };
 
-type Payment = {
-  amount: number;
-  category?: keyof typeof categoryMap;
-  createdAt: string;
-  id: number;
-  isIncome: boolean;
+type Product = {
+  id: string;
   name: string;
+  price: number;
+  quantity: boolean;
 };
 
-export default Payment;
+export default Product;

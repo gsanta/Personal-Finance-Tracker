@@ -1,20 +1,19 @@
-import useGetPayments, { Payments } from './hooks/useGetPayments';
-import NewPayment from './components/NewPayment';
+import useGetProducts, { Products } from './hooks/useGetProducts';
 import useIsMobile from '@/hooks/useIsMobile';
-import PaymentsTable from './components/PaymentsTable';
+import ProductsTable from './components/ProductsTable';
 import useQueryParam from '@/utils/useQueryParam';
 import Page from '@/components/Page';
 
 type ProductsPageProps = {
-  payments: Payments;
+  payments: Products;
 };
 
 const ProductsPage = ({ payments: initialPayments }: ProductsPageProps) => {
   const isMobile = useIsMobile();
 
-  // const [page, setPage] = useQueryParam('page', '');
+  const [page, setPage] = useQueryParam('page', '');
 
-  // const { payments, refetchPayments } = useGetPayments({ page, initialPayments });
+  const { payments, refetchPayments } = useGetProducts({ page, initialPayments });
 
   return (
     <Page>
@@ -34,7 +33,7 @@ const ProductsPage = ({ payments: initialPayments }: ProductsPageProps) => {
                 )}
               </div>
               <div className="divider"></div>
-              {/* <PaymentsTable
+              {/* <ProductsTable
                 payments={payments}
                 page={Number(page)}
                 refetchPayments={refetchPayments}

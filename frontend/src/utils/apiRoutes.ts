@@ -40,8 +40,8 @@ export const pathWithConfig = (path: string, config?: Config): string => {
   return path;
 };
 
-export const paymentsPath = (config?: Config): string => {
-  return pathWithConfig('/api/payments', config);
+export const productsPath = (config?: Config): string => {
+  return pathWithConfig('/api/products', config);
 };
 
 export const paymentPath = (id: string | number, config?: Config): string => {

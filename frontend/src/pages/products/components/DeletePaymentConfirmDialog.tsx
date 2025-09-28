@@ -1,9 +1,9 @@
 import { api, paymentPath } from '@/utils/apiRoutes';
 import { useMutation } from '@tanstack/react-query';
-import Payment from '../types/Payment';
+import Product from '../types/Payment';
 
 type DeletePaymentConfirmDialogProps = {
-  item: Payment | null;
+  item: Product | null;
   refetchPayments: () => void;
 };
 

@@ -1,12 +1,12 @@
 import useIsMobile from '@/hooks/useIsMobile';
-import { Payments } from '../hooks/useGetPayments';
+import { Products } from '../hooks/useGetProducts';
 import { BiTrash } from 'react-icons/bi';
 import { useMemo, useState } from 'react';
-import Payment, { categoryMap } from '../types/Payment';
+import Product, { categoryMap } from '../types/Payment';
 import DeletePaymentConfirmDialog from './DeletePaymentConfirmDialog';
 
-type PaymentsTableProps = {
-  payments: Payments;
+type ProductsTableProps = {
+  payments: Products;
   page: number;
   setPage: (page: number) => void;
   refetchPayments: () => void;
@@ -14,14 +14,14 @@ type PaymentsTableProps = {
 
 const ITEMS_PER_PAGE = 10;
 
-const PaymentsTable = ({ payments, page, setPage, refetchPayments }: PaymentsTableProps) => {
+const ProductsTable = ({ payments, page, setPage, refetchPayments }: ProductsTableProps) => {
   const isMobile = useIsMobile();
 
   const currentPage = page || 1;
 
-  const [payment, setSelectedPayment] = useState<Payment | null>(null);
+  const [payment, setSelectedPayment] = useState<Product | null>(null);
 
-  const handleDelete = (payment: Payment) => {
+  const handleDelete = (payment: Product) => {
     setSelectedPayment(payment);
     const dialog = document.getElementById('delete-payment-dialog') as HTMLDialogElement;
     dialog?.showModal();
@@ -98,4 +98,4 @@ const PaymentsTable = ({ payments, page, setPage, refetchPayments }: PaymentsTab
   );
 };
 
-export default PaymentsTable;
+export default ProductsTable;

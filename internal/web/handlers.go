@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +27,15 @@ func LoadTemplates() {
 	}).ParseGlob(filepath.Join("internal", "web", "templates", "*.html")))
 }
 
-func RenderPage(w http.ResponseWriter, manifestClient *ManifestClient, entry string, pageProps interface{}) {
+func RenderPage(w http.ResponseWriter, r *http.Request, pageProps interface{}) {
+	if manifestClient == nil {
+		manifestClient = NewManifestClient(os.Getenv("MANIFEST_HOST"))
+	}
+
+	uri := r.RequestURI
+	formattedUri := strings.ReplaceAll(uri, "-", "_")
+	entry := "pages" + formattedUri + "/entry"
+
 	jsFiles := manifestClient.JS(entry)
 	cssFiles := manifestClient.CSS(entry)
 	data := map[string]interface{}{
@@ -46,6 +55,22 @@ func mustJSON(v interface{}) string {
 		panic(err)
 	}
 	return string(b)
+}
+
+func ParsePaginationParams(r *http.Request) (page, itemsPerPage int) {
+	page = 1
+	itemsPerPage = 10
+	if p := r.URL.Query().Get("page"); p != "" {
+		if v, err := strconv.Atoi(p); err == nil && v > 0 {
+			page = v
+		}
+	}
+	if ipp := r.URL.Query().Get("items_per_page"); ipp != "" {
+		if v, err := strconv.Atoi(ipp); err == nil && v > 0 {
+			itemsPerPage = v
+		}
+	}
+	return
 }
 
 func SummariesHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,30 +101,30 @@ func SummariesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func StatusHandler(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]interface{}{"status": "ok", "time": time.Now()})
-}
+//func StatusHandler(w http.ResponseWriter, r *http.Request) {
+//	writeJSON(w, http.StatusOK, map[string]interface{}{"status": "ok", "time": time.Now()})
+//}
+//
+//func AsyncHandler(w http.ResponseWriter, r *http.Request) {
+//	var req struct {
+//		Task string `json:"task"`
+//	}
+//	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+//		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid payload"})
+//		return
+//	}
+//	// enqueue background work (simple fire-and-forget example)
+//	go processTask(req.Task)
+//	writeJSON(w, http.StatusAccepted, map[string]string{"status": "accepted"})
+//}
 
-func AsyncHandler(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Task string `json:"task"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid payload"})
-		return
-	}
-	// enqueue background work (simple fire-and-forget example)
-	go processTask(req.Task)
-	writeJSON(w, http.StatusAccepted, map[string]string{"status": "accepted"})
-}
-
-func processTask(task string) {
+func ProcessTask(task string) {
 	// replace with real queue/worker in production
 	time.Sleep(2 * time.Second)
 	// log/store result
 }
 
-func writeJSON(w http.ResponseWriter, status int, v interface{}) {
+func WriteJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)

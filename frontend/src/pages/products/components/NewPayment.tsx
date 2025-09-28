@@ -1,13 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { api, paymentsPath } from '@/utils/apiRoutes';
+import { api, productsPath } from '@/utils/apiRoutes';
 import NewPaymentForm from './NewPaymentForm';
-import Payment from '../types/Payment';
+import Product from '../types/Payment';
 import useIsMobile from '@/hooks/useIsMobile';
 import { BiCheck } from 'react-icons/bi';
 import { useState } from 'react';
 
-type PaymentRequest = Pick<Payment, 'name' | 'amount' | 'isIncome'>;
+type PaymentRequest = Pick<Product, 'name' | 'amount' | 'isIncome'>;
 
 type NewPaymentProps = {
   refetchPayments: () => void;
@@ -37,7 +37,7 @@ const NewPayment = ({ refetchPayments }: NewPaymentProps) => {
     reset: resetMutation,
   } = useMutation({
     mutationFn: async (request: PaymentRequest) => {
-      const data = await api.post(paymentsPath(), request);
+      const data = await api.post(productsPath(), request);
       return data;
     },
     onSuccess: () => {
