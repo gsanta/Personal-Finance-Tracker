@@ -2,19 +2,21 @@ import { api, productsPath } from '@/utils/apiRoutes';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosResponse } from 'axios';
 import Product from '../types/Payment';
+import { useState } from 'react';
 
 export type Products = {
   totalCount: number;
   items: Product[];
 };
 
-type UseGetPaymentsProps = {
+type UseGetProductsProps = {
   page: string;
-  initialPayments: Products;
+  initialProducts: Products;
 };
 
-const useGetProducts = ({ page, initialPayments }: UseGetPaymentsProps) => {
-  const { data: payments, refetch: refetchPayments } = useQuery<AxiosResponse<Products>, unknown, Products>({
+const useGetProducts = ({ page, initialProducts }: UseGetProductsProps) => {
+  const [initialPage] = useState(page);
+  const { data: products, refetch: refetchProducts } = useQuery<AxiosResponse<Products>, unknown, Products>({
     queryKey: ['products', page],
     queryFn: async () => {
       const data = await api.get(
@@ -25,15 +27,15 @@ const useGetProducts = ({ page, initialPayments }: UseGetPaymentsProps) => {
       return data;
     },
     initialData: {
-      data: initialPayments,
+      data: initialProducts,
     } as AxiosResponse<Products>,
     select: (response) => response.data,
-    // staleTime: 2000,
+    staleTime: page === initialPage ? 2000 : 0,
   });
 
   return {
-    payments,
-    refetchPayments,
+    products,
+    refetchProducts,
   };
 };
 

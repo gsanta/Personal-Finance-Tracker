@@ -55,3 +55,5 @@ export const categorySummaryPath = (config?: Config): string => {
 export const monthlySummaryPath = (config?: Config): string => {
   return pathWithConfig('/api/summary/monthly', config);
 };
+
+export const uploadPath = '/api/upload/generate-url';

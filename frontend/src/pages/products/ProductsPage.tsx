@@ -3,17 +3,18 @@ import useIsMobile from '@/hooks/useIsMobile';
 import ProductsTable from './components/ProductsTable';
 import useQueryParam from '@/utils/useQueryParam';
 import Page from '@/components/Page';
+import FileUpload from '@/components/FileUpload';
 
 type ProductsPageProps = {
-  payments: Products;
+  products: Products;
 };
 
-const ProductsPage = ({ payments: initialPayments }: ProductsPageProps) => {
+const ProductsPage = ({ products: initialProducts }: ProductsPageProps) => {
   const isMobile = useIsMobile();
 
   const [page, setPage] = useQueryParam('page', '');
 
-  const { payments, refetchPayments } = useGetProducts({ page, initialPayments });
+  const { products } = useGetProducts({ page, initialProducts });
 
   return (
     <Page>
@@ -33,14 +34,15 @@ const ProductsPage = ({ payments: initialPayments }: ProductsPageProps) => {
                 )}
               </div>
               <div className="divider"></div>
-              {/* <ProductsTable
-                payments={payments}
+              <ProductsTable
+                products={products}
                 page={Number(page)}
-                refetchPayments={refetchPayments}
                 setPage={(newPage: number) => setPage(String(newPage))}
-              /> */}
+              />
             </div>
           </div>
+
+          <FileUpload />
 
           {/* <NewPayment refetchPayments={refetchPayments} /> */}
         </div>

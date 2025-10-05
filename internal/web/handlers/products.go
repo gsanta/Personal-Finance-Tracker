@@ -1,6 +1,7 @@
 package web
 
 import (
+	"log"
 	"net/http"
 	"sync"
 
@@ -14,6 +15,7 @@ var (
 )
 
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("[ProductsHandler] called: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 	tplOnce.Do(web.LoadTemplates)
 
 	page, itemsPerPage := web.ParsePaginationParams(r)
@@ -29,6 +31,8 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	for _, p := range products {
 		presentedProducts = append(presentedProducts, presenters.NewProductPresenter(p))
 	}
+
+	log.Printf("[ProductsHandler] called: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 
 	productsPresenter := presenters.PaginatedItemsPresenter{
 		Items:      presentedProducts,

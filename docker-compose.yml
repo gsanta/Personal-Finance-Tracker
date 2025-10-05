@@ -10,6 +10,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
       - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+  fake-gcs:
+    image: fsouza/fake-gcs-server:latest
+    command: [ "-scheme", "http", "-external-url", "http://fake-gcs:4443" ]
+    ports:
+      - "4443:4443"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://fake-gcs:4443/storage/v1/b" ]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+      
   app:
     image: openjdk:21-jdk
     environment:

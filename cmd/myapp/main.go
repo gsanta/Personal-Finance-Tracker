@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/storage"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 	handlers "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers"
 	api "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers/api"
@@ -21,6 +22,17 @@ func main() {
 		log.Println("No .env file found or error loading .env")
 	}
 	db.Init()
+
+	bucketName := os.Getenv("GCS_BUCKET_NAME")
+	if bucketName == "" {
+		bucketName = "personal-finance-uploads"
+	}
+
+	gcsService, err := storage.NewGCSService(ctx, bucketName)
+	if err != nil {
+		log.Fatalf("Failed to create GCS service: %v", err)
+	}
+	defer gcsService.Close()
 
 	r := chi.NewRouter()
 
@@ -40,6 +52,8 @@ func main() {
 	r.Get("/summaries", web.SummariesHandler)
 	r.Get("/api/products", api.ProductsHandler) // JSON
 	//r.Post("/api/do_async", web.AsyncHandler)   // JSON API
+	uploadHandler := api.NewUploadHandler(gcsService)
+	http.HandleFunc("/api/upload/generate-url", uploadHandler.GenerateUploadURL)
 
 	port := os.Getenv("PORT")
 	if port == "" {

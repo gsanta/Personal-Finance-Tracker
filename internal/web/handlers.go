@@ -32,7 +32,7 @@ func RenderPage(w http.ResponseWriter, r *http.Request, pageProps interface{}) {
 		manifestClient = NewManifestClient(os.Getenv("MANIFEST_HOST"))
 	}
 
-	uri := r.RequestURI
+	uri := r.URL.Path
 	formattedUri := strings.ReplaceAll(uri, "-", "_")
 	entry := "pages" + formattedUri + "/entry"
 
