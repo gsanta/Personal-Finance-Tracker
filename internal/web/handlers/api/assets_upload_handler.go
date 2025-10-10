@@ -30,6 +30,7 @@ type GenerateUploadURLResponse struct {
 	UploadURL string `json:"uploadUrl"`
 	ObjectKey string `json:"objectKey"`
 	PublicURL string `json:"publicUrl"`
+	Method    string `json:"method"`
 }
 
 // GenerateUploadURL handles POST /api/upload/generate-url
@@ -56,7 +57,7 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 	objectKey := fmt.Sprintf("uploads/%d/%s%s", time.Now().Unix(), uuid.New().String(), ext)
 
 	// Generate signed URL
-	uploadURL, err := h.storageService.GenerateSignedUploadURL(r.Context(), objectKey, req.ContentType)
+	method, uploadURL, err := h.storageService.GenerateSignedUploadURL(r.Context(), objectKey, req.ContentType)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to generate upload URL: %v", err), http.StatusInternalServerError)
 		return
@@ -66,6 +67,7 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 		UploadURL: uploadURL,
 		ObjectKey: objectKey,
 		PublicURL: h.storageService.GetPublicURL(objectKey),
+		Method:    method,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

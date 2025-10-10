@@ -1,0 +1,17 @@
+{
+  "buckets": [
+    {
+      "name": "personal-finance-uploads",
+      "versioningEnabled": false,
+      "cors": [
+        {
+          "origin": ["*"],
+          "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
+          "responseHeader": ["*"],
+          "maxAgeSeconds": 3600
+        }
+      ]
+    }
+  ],
+  "objects": []
+}
