@@ -64,3 +64,6 @@ maven-wrapper.jar
 public
 
 dev.env
+
+fake-gcs-data/personal-finance-uploads/uploads/
+fake-gcs-data/*.bucketMetadata

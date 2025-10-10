@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { api, uploadPath } from '@/utils/apiRoutes';
 import { ChangeEvent, useRef, useState } from 'react';
+import { AxiosResponse } from 'axios';
 
 type UploadRequest = {
   fileName: string;
@@ -14,15 +15,22 @@ const FileUpload = () => {
 
   const [uploading, setUploading] = useState(false);
 
-  const { mutateAsync: mutateUploadUrl } = useMutation<string, unknown, UploadRequest>({
+  const { mutateAsync: mutateUploadUrl } = useMutation<
+    AxiosResponse<{ uploadUrl: string; method: string }>,
+    unknown,
+    UploadRequest
+  >({
     mutationFn: async (variables) => {
       return api.post(uploadPath, variables);
     },
   });
 
-  const { mutate: mutateUploadFile } = useMutation<unknown, unknown, { file: File; url: string }>({
-    mutationFn: async ({ file, url}) => {
-      return api.put(url, file, {
+  const { mutate: mutateUploadFile } = useMutation<unknown, unknown, { file: File; url: string; method: string }>({
+    mutationFn: async ({ file, url, method }) => {
+      return api.request({
+        url,
+        method,
+        data: file,
         headers: {
           'Content-Type': file.type,
         },
@@ -40,7 +48,6 @@ const FileUpload = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-
     // // Create preview for images
     // if (file.type.startsWith('image/')) {
     //   const reader = new FileReader();
@@ -49,8 +56,9 @@ const FileUpload = () => {
     //   };
     //   reader.readAsDataURL(file);
     // }
-    const uploadUrl = await mutateUploadUrl({ fileName: file.name, contentType: file.type })
-    mutateUploadFile({ url: uploadUrl, file });
+    const uploadUrl = await mutateUploadUrl({ fileName: file.name, contentType: file.type });
+    console.log(uploadUrl);
+    mutateUploadFile({ url: uploadUrl.data.uploadUrl, file, method: uploadUrl.data.method });
   };
 
   return (

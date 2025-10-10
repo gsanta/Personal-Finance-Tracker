@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +18,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load("dev.env")
 	if err != nil {
 		log.Println("No .env file found or error loading .env")
 	}
@@ -28,7 +29,7 @@ func main() {
 		bucketName = "personal-finance-uploads"
 	}
 
-	gcsService, err := storage.NewGCSService(ctx, bucketName)
+	gcsService, err := storage.NewGCSService(context.Background(), bucketName)
 	if err != nil {
 		log.Fatalf("Failed to create GCS service: %v", err)
 	}
@@ -53,7 +54,7 @@ func main() {
 	r.Get("/api/products", api.ProductsHandler) // JSON
 	//r.Post("/api/do_async", web.AsyncHandler)   // JSON API
 	uploadHandler := api.NewUploadHandler(gcsService)
-	http.HandleFunc("/api/upload/generate-url", uploadHandler.GenerateUploadURL)
+	r.Post("/api/upload/generate-url", uploadHandler.GenerateUploadURL)
 
 	port := os.Getenv("PORT")
 	if port == "" {

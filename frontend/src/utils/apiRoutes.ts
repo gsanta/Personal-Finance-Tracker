@@ -3,7 +3,7 @@ import flatten from 'lodash/flatten';
 import { snakeCaseKeys, camelCaseKeys } from './transformKeys';
 
 export const transformResponse = flatten([axios.defaults.transformResponse || [], camelCaseKeys]);
-const transformRequest = flatten([snakeCaseKeys, axios.defaults.transformRequest || []]);
+// const transformRequest = flatten([snakeCaseKeys, axios.defaults.transformRequest || []]);
 
 export const api = axios.create({
   headers: {
@@ -11,7 +11,7 @@ export const api = axios.create({
     Accept: 'application/json',
   },
   transformResponse,
-  transformRequest,
+  // transformRequest,
 });
 
 type Config = {

@@ -89,3 +89,77 @@ Run seed file
 ```sh
 psql "postgres://test-user:test-pw@localhost:6501/cat_db?sslmode=disable" -f db/seed/data-dev.sql
 ```
+
+## Fake GCS (Local Storage / Uploads)
+
+This project uses `fsouza/fake-gcs-server` for local development of Google Cloud Storage interactions.
+
+### Bucket auto-creation
+
+On startup the Go service checks `STORAGE_EMULATOR_HOST` and automatically creates (idempotently) the bucket defined by `GCS_BUCKET_NAME`.
+
+### Generating an upload URL (dual‑mode)
+
+Call the backend:
+
+```sh
+curl -s -X POST http://localhost:3012/api/upload/generate-url \
+   -H 'Content-Type: application/json' \
+   -d '{"fileName":"cat.png","contentType":"image/png"}' | jq
+```
+
+Local emulator response example (note the extra `method` field and the different `uploadUrl` path):
+
+```json
+{
+   "uploadUrl": "http://localhost:4443/upload/storage/v1/b/personal-finance-uploads/o?uploadType=media&name=uploads%2F<ts>%2F<uuid>.png",
+   "objectKey": "uploads/<ts>/<uuid>.png",
+   "publicUrl": "http://localhost:4443/personal-finance-uploads/uploads/<ts>/<uuid>.png",
+   "method": "POST"
+}
+```
+
+Production (real GCS) example (structure — actual signed URL will be long & signed):
+
+```json
+{
+   "uploadUrl": "https://storage.googleapis.com/personal-finance-uploads/uploads/<ts>/<uuid>.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&...",
+   "objectKey": "uploads/<ts>/<uuid>.png",
+   "publicUrl": "https://storage.googleapis.com/personal-finance-uploads/uploads/<ts>/<uuid>.png",
+   "method": "PUT"
+}
+```
+
+### Performing the upload
+
+Always use the returned `method` and `uploadUrl` exactly as provided:
+
+Emulator (POST media upload):
+```sh
+curl -v -X POST <uploadUrl from JSON> \
+   -H 'Content-Type: image/png' \
+   --data-binary @cat.png
+```
+
+Production (PUT signed URL):
+```sh
+curl -v -X PUT "<uploadUrl from JSON>" \
+   -H 'Content-Type: image/png' \
+   --data-binary @cat.png
+```
+
+### Common issues
+
+1. 404 on upload: Bucket not yet created (restart app or ensure env var set) or wrong host (use `localhost:4443` from host machine, not the container name).
+2. 400 `invalid uploadType`: You are attempting a PUT to the emulator object path; regenerate an URL and use the provided POST media endpoint.
+3. 403/AccessDenied (production): Bucket/object not publicly readable; configure IAM / uniform bucket-level access or serve via signed GET URLs.
+4. Wrong `Content-Type`: Must match what you declared when generating the URL (production signed URL includes it in the signature).
+
+### Environment variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `STORAGE_EMULATOR_HOST` | Emulator base URL for storage client & URL generation | `http://localhost:4443` |
+| `GCS_BUCKET_NAME` | Bucket name used for uploads | `personal-finance-uploads` |
+
+Emulator data (including object bytes) now persists under `./fake-gcs-data`.
