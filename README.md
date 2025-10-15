@@ -138,14 +138,14 @@ Emulator (POST media upload):
 ```sh
 curl -v -X POST <uploadUrl from JSON> \
    -H 'Content-Type: image/png' \
-   --data-binary @cat.png
+   --data-binary @test/assets/cat.png
 ```
 
 Production (PUT signed URL):
 ```sh
 curl -v -X PUT "<uploadUrl from JSON>" \
    -H 'Content-Type: image/png' \
-   --data-binary @cat.png
+   --data-binary @test/assets/cat.png
 ```
 
 ### Common issues

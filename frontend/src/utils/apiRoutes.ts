@@ -56,4 +56,6 @@ export const monthlySummaryPath = (config?: Config): string => {
   return pathWithConfig('/api/summary/monthly', config);
 };
 
-export const uploadPath = '/api/upload/generate-url';
+export const mediaUploadPath = '/api/media/upload-url';
+
+export const mediaFinalizeUploadPath = '/api/media/upload-finalize';

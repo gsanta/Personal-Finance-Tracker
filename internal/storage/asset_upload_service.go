@@ -69,22 +69,22 @@ func (s *GCSService) ensureBucket(ctx context.Context) error {
 			return nil
 		}
 		log.Printf("[gcs] create failed bucket=%s err=%v (attempt dummy object)", s.bucketName, cerr)
-        // attempt dummy object write which some emulators materialize bucket on
-        w := bkt.Object(".bucket-init").NewWriter(ctx)
-        if _, werr := w.Write([]byte{}); werr != nil {
-            _ = w.Close()
-            log.Printf("[gcs] dummy object write failed bucket=%s err=%v", s.bucketName, werr)
-            return cerr // return original create error
-        }
-        if werr := w.Close(); werr != nil {
-            log.Printf("[gcs] dummy object close failed bucket=%s err=%v", s.bucketName, werr)
-            return cerr
-        }
-        log.Printf("[gcs] dummy object wrote bucket=%s -> proceeding", s.bucketName)
-        return nil
-    }
-    log.Printf("[gcs] bucket created bucket=%s", s.bucketName)
-    return nil
+		// attempt dummy object write which some emulators materialize bucket on
+		w := bkt.Object(".bucket-init").NewWriter(ctx)
+		if _, werr := w.Write([]byte{}); werr != nil {
+			_ = w.Close()
+			log.Printf("[gcs] dummy object write failed bucket=%s err=%v", s.bucketName, werr)
+			return cerr // return original create error
+		}
+		if werr := w.Close(); werr != nil {
+			log.Printf("[gcs] dummy object close failed bucket=%s err=%v", s.bucketName, werr)
+			return cerr
+		}
+		log.Printf("[gcs] dummy object wrote bucket=%s -> proceeding", s.bucketName)
+		return nil
+	}
+	log.Printf("[gcs] bucket created bucket=%s", s.bucketName)
+	return nil
 }
 
 // GenerateSignedUploadURL returns the HTTP method and URL a client should use to upload an object.
@@ -96,7 +96,7 @@ func (s *GCSService) GenerateSignedUploadURL(ctx context.Context, objectName str
 		if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
 			base = "http://" + base
 		}
-		// JSON media upload style: POST /upload/storage/v1/b/{bucket}/o?uploadType=media&name={objectName}
+
 		escapedName := url.QueryEscape(objectName)
 		uploadURL := fmt.Sprintf("%s/upload/storage/v1/b/%s/o?uploadType=media&name=%s", base, s.bucketName, escapedName)
 		log.Printf("[gcs] generate emulator upload url method=POST bucket=%s object=%s url=%s", s.bucketName, objectName, uploadURL)

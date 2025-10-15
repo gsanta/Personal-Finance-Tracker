@@ -3,7 +3,7 @@ import useIsMobile from '@/hooks/useIsMobile';
 import ProductsTable from './components/ProductsTable';
 import useQueryParam from '@/utils/useQueryParam';
 import Page from '@/components/Page';
-import FileUpload from '@/components/FileUpload';
+import ImageUploadDialog from '@/components/ImageUploadDialog';
 
 type ProductsPageProps = {
   products: Products;
@@ -18,9 +18,14 @@ const ProductsPage = ({ products: initialProducts }: ProductsPageProps) => {
 
   return (
     <Page>
-      <div className="flex flex-col gap-4 items-center p-6 bg-base-200">
+      <div className="flex flex-col gap-4 items-center p-6">
         <div className="flex gap-4 items-start">
-          <div className="card bg-base-100 shadow-xl">
+          <div className="card shadow-xl">
+            <ProductsTable
+              products={products}
+              page={Number(page)}
+              setPage={(newPage: number) => setPage(String(newPage))}
+            />
             <div className="card-body">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-lg">Transactions</h3>
@@ -34,15 +39,10 @@ const ProductsPage = ({ products: initialProducts }: ProductsPageProps) => {
                 )}
               </div>
               <div className="divider"></div>
-              <ProductsTable
-                products={products}
-                page={Number(page)}
-                setPage={(newPage: number) => setPage(String(newPage))}
-              />
             </div>
           </div>
 
-          <FileUpload />
+          <ImageUploadDialog />
 
           {/* <NewPayment refetchPayments={refetchPayments} /> */}
         </div>

@@ -53,8 +53,11 @@ func main() {
 	r.Get("/summaries", web.SummariesHandler)
 	r.Get("/api/products", api.ProductsHandler) // JSON
 	//r.Post("/api/do_async", web.AsyncHandler)   // JSON API
-	uploadHandler := api.NewUploadHandler(gcsService)
-	r.Post("/api/upload/generate-url", uploadHandler.GenerateUploadURL)
+	uploadHandler := api.NewUploadHandler(db.DB, gcsService)
+	r.Post("/api/media/upload-url", uploadHandler.GenerateUploadURL)
+
+	mediaHandler := api.NewMediaHandler(db.DB, bucketName)
+	r.Post("/api/media/upload-finalize", mediaHandler.Finalize)
 
 	port := os.Getenv("PORT")
 	if port == "" {
