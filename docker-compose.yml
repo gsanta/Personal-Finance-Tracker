@@ -36,6 +36,9 @@ services:
     command: gcloud beta emulators xpubsub start --host-port=0.0.0.0:8085
     ports:
       - "8085:8085"   # host:container
+    environment:
+      - PROJECT_ID=pubsub-dev-test
+      - PUBSUB_EMULATOR_HOST=localhost:8085
     healthcheck:
       test: [ "CMD-SHELL", "curl -sS http://localhost:8085/" ]
       interval: 5s
@@ -43,6 +46,22 @@ services:
       retries: 5
       # Keep it lightweight: no restart policy by default, add if you want
       # restart: always
+
+  media-asset-publisher:
+    build:
+      context: ./scripts/media_asset_created_publisher
+      dockerfile: Dockerfile
+    depends_on:
+      - pubsub-emulator
+    environment:
+      - PROJECT_ID=pubsub-dev-test
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+      - GCS_BUCKET_NAME=dev-bucket
+      - WATCH_ROOT=/data/personal-finance-uploads/uploads
+    volumes:
+      - ./fake-gcs-data:/data:ro
+    # Long-running watcher; restart on failure
+    restart: unless-stopped
       
 #  app:
 #    image: openjdk:21-jdk

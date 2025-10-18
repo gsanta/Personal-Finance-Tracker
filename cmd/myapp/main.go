@@ -7,9 +7,11 @@ import (
 	"os"
 	"time"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/pubsub"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/storage"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 	handlers "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers"
@@ -34,6 +36,30 @@ func main() {
 		log.Fatalf("Failed to create GCS service: %v", err)
 	}
 	defer gcsService.Close()
+
+	// pubsub
+	startCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cfg := pubsubinit.LoadConfig()
+	resources, err := pubsubinit.EnsurePubSub(startCtx, cfg)
+	if err != nil {
+		log.Fatalf("pubsub init failed: %v", err)
+	}
+	defer resources.Client.Close()
+
+	go func() {
+		err := resources.Subscription.Receive(context.Background(), func(ctx context.Context, m *pubsub.Message) {
+			log.Printf("eventType=%s bucket=%s object=%s", m.Attributes["eventType"], m.Attributes["bucketId"], m.Attributes["objectId"])
+			// process m.Data (already decoded bytes)
+			m.Ack()
+		})
+		if err != nil {
+			log.Printf("subscriber stopped: %v", err)
+		}
+	}()
+
+	// routes
 
 	r := chi.NewRouter()
 
