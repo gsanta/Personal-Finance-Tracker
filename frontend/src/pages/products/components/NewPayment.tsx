@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { api, productsPath } from '@/utils/apiRoutes';
 import NewPaymentForm from './NewPaymentForm';
-import Product from '../types/Payment';
+import Product from '../types/Product';
 import useIsMobile from '@/hooks/useIsMobile';
 import { BiCheck } from 'react-icons/bi';
 import { useState } from 'react';

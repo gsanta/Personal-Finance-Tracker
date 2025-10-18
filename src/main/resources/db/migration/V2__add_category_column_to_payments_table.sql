@@ -1,2 +1,0 @@
-ALTER TABLE payments
-ADD COLUMN category VARCHAR(255);

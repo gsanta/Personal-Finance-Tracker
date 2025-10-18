@@ -11,7 +11,7 @@ import (
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	page, itemsPerPage := web.ParsePaginationParams(r)
 
-	products, total, err := db.GetAllProducts(db.DB, page, itemsPerPage)
+	products, total, err := db.GetAllProductsWithAssets(db.DB, page, itemsPerPage)
 
 	if err != nil {
 		// handle error (e.g., log or return HTTP 500)

@@ -42,7 +42,12 @@ const ProductsPage = ({ products: initialProducts }: ProductsPageProps) => {
             </div>
           </div>
 
-          <ImageUploadDialog />
+          {/* <ImageUploadDialog
+            onClose={() => {
+              productIdRef.current = undefined;
+            }}
+            productId={productIdRef.current}
+          /> */}
 
           {/* <NewPayment refetchPayments={refetchPayments} /> */}
         </div>

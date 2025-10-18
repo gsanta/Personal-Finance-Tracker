@@ -1,7 +1,7 @@
 import { api, productsPath } from '@/utils/apiRoutes';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosResponse } from 'axios';
-import Product from '../types/Payment';
+import Product from '../types/Product';
 import { useState } from 'react';
 
 export type Products = {

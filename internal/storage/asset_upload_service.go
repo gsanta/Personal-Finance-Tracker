@@ -16,7 +16,7 @@ import (
 
 type GCSService struct {
 	client     *storage.Client
-	bucketName string
+	BucketName string
 }
 
 func NewGCSService(ctx context.Context, bucketName string) (*GCSService, error) {
@@ -37,7 +37,7 @@ func NewGCSService(ctx context.Context, bucketName string) (*GCSService, error) 
 		return nil, fmt.Errorf("failed to create storage client: %w", err)
 	}
 
-	svc := &GCSService{client: client, bucketName: bucketName}
+	svc := &GCSService{client: client, BucketName: bucketName}
 	if emulatorHost != "" {
 		if err := svc.ensureBucket(ctx); err != nil {
 			log.Printf("[gcs] warn: ensureBucket failed (continuing) bucket=%s err=%v", bucketName, err)
@@ -55,35 +55,35 @@ func normalizeEmulatorHost(h string) string {
 }
 
 func (s *GCSService) ensureBucket(ctx context.Context) error {
-	bkt := s.client.Bucket(s.bucketName)
+	bkt := s.client.Bucket(s.BucketName)
 	_, err := bkt.Attrs(ctx)
 	if err == nil {
-		log.Printf("[gcs] bucket exists bucket=%s", s.bucketName)
+		log.Printf("[gcs] bucket exists bucket=%s", s.BucketName)
 		return nil
 	}
-	log.Printf("[gcs] bucket attrs error bucket=%s err=%v (attempt create)", s.bucketName, err)
+	log.Printf("[gcs] bucket attrs error bucket=%s err=%v (attempt create)", s.BucketName, err)
 	if cerr := bkt.Create(ctx, "fake-project-id", nil); cerr != nil {
 		low := strings.ToLower(cerr.Error())
 		if strings.Contains(low, "already") {
-			log.Printf("[gcs] bucket already exists after create attempt bucket=%s", s.bucketName)
+			log.Printf("[gcs] bucket already exists after create attempt bucket=%s", s.BucketName)
 			return nil
 		}
-		log.Printf("[gcs] create failed bucket=%s err=%v (attempt dummy object)", s.bucketName, cerr)
+		log.Printf("[gcs] create failed bucket=%s err=%v (attempt dummy object)", s.BucketName, cerr)
 		// attempt dummy object write which some emulators materialize bucket on
 		w := bkt.Object(".bucket-init").NewWriter(ctx)
 		if _, werr := w.Write([]byte{}); werr != nil {
 			_ = w.Close()
-			log.Printf("[gcs] dummy object write failed bucket=%s err=%v", s.bucketName, werr)
+			log.Printf("[gcs] dummy object write failed bucket=%s err=%v", s.BucketName, werr)
 			return cerr // return original create error
 		}
 		if werr := w.Close(); werr != nil {
-			log.Printf("[gcs] dummy object close failed bucket=%s err=%v", s.bucketName, werr)
+			log.Printf("[gcs] dummy object close failed bucket=%s err=%v", s.BucketName, werr)
 			return cerr
 		}
-		log.Printf("[gcs] dummy object wrote bucket=%s -> proceeding", s.bucketName)
+		log.Printf("[gcs] dummy object wrote bucket=%s -> proceeding", s.BucketName)
 		return nil
 	}
-	log.Printf("[gcs] bucket created bucket=%s", s.bucketName)
+	log.Printf("[gcs] bucket created bucket=%s", s.BucketName)
 	return nil
 }
 
@@ -98,8 +98,8 @@ func (s *GCSService) GenerateSignedUploadURL(ctx context.Context, objectName str
 		}
 
 		escapedName := url.QueryEscape(objectName)
-		uploadURL := fmt.Sprintf("%s/upload/storage/v1/b/%s/o?uploadType=media&name=%s", base, s.bucketName, escapedName)
-		log.Printf("[gcs] generate emulator upload url method=POST bucket=%s object=%s url=%s", s.bucketName, objectName, uploadURL)
+		uploadURL := fmt.Sprintf("%s/upload/storage/v1/b/%s/o?uploadType=media&name=%s", base, s.BucketName, escapedName)
+		log.Printf("[gcs] generate emulator upload url method=POST bucket=%s object=%s url=%s", s.BucketName, objectName, uploadURL)
 		return "POST", uploadURL, nil
 	}
 
@@ -112,17 +112,17 @@ func (s *GCSService) GenerateSignedUploadURL(ctx context.Context, objectName str
 		ContentType: contentType,
 	}
 
-	signedURL, err := s.client.Bucket(s.bucketName).SignedURL(objectName, opts)
+	signedURL, err := s.client.Bucket(s.BucketName).SignedURL(objectName, opts)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to generate signed URL bucket=%s object=%s: %w", s.bucketName, objectName, err)
+		return "", "", fmt.Errorf("failed to generate signed URL bucket=%s object=%s: %w", s.BucketName, objectName, err)
 	}
-	log.Printf("[gcs] generate production signed url method=PUT bucket=%s object=%s", s.bucketName, objectName)
+	log.Printf("[gcs] generate production signed url method=PUT bucket=%s object=%s", s.BucketName, objectName)
 	return "PUT", signedURL, nil
 }
 
 // Upload uploads a file directly (alternative approach)
 func (s *GCSService) Upload(ctx context.Context, objectName string, contentType string, data io.Reader) error {
-	wc := s.client.Bucket(s.bucketName).Object(objectName).NewWriter(ctx)
+	wc := s.client.Bucket(s.BucketName).Object(objectName).NewWriter(ctx)
 	wc.ContentType = contentType
 
 	if _, err := io.Copy(wc, data); err != nil {
@@ -134,18 +134,6 @@ func (s *GCSService) Upload(ctx context.Context, objectName string, contentType 
 	}
 
 	return nil
-}
-
-// GetPublicURL returns the public URL for an object
-func (s *GCSService) GetPublicURL(objectName string) string {
-	if emulatorHost := os.Getenv("STORAGE_EMULATOR_HOST"); emulatorHost != "" {
-		base := strings.TrimRight(emulatorHost, "/")
-		if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
-			base = "http://" + base
-		}
-		return fmt.Sprintf("%s/%s/%s", base, s.bucketName, objectName)
-	}
-	return fmt.Sprintf("https://storage.googleapis.com/%s/%s", s.bucketName, objectName)
 }
 
 func (s *GCSService) Close() error {

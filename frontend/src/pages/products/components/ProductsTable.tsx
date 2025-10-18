@@ -1,8 +1,9 @@
 import useIsMobile from '@/hooks/useIsMobile';
 import { Products } from '../hooks/useGetProducts';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ImageUploadDialog from '@/components/ImageUploadDialog';
 import { BiCheck, BiImageAdd } from 'react-icons/bi';
+import Carousel from './Carousel';
 
 type ProductsTableProps = {
   products: Products;
@@ -19,10 +20,10 @@ const ProductsTable = ({ products, page, setPage }: ProductsTableProps) => {
 
   const pages = useMemo(() => Math.ceil(products.totalCount / ITEMS_PER_PAGE), [products.totalCount]);
 
-  const productIdRef = useRef<string>();
+  const [productId, setProductId] = useState<string>();
 
   const handleOpenUploadDialog = (productId: string) => {
-    productIdRef.current = productId;
+    setProductId(productId);
     const dialog = document.getElementById('image-upload-dialog') as HTMLDialogElement;
     if (dialog) {
       dialog.showModal();
@@ -35,9 +36,10 @@ const ProductsTable = ({ products, page, setPage }: ProductsTableProps) => {
         {products.items.map((product) => {
           return (
             <div className="card bg-base-100 shadow-sm w-[20rem]" key={product.id}>
-              <figure>
+              <Carousel mediaAssets={product.mediaAssets} />
+              {/* <figure>
                 <img src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp" alt="Shoes" />
-              </figure>
+              </figure> */}
               <div className="card-body">
                 <h2 className="card-title">{product.name}</h2>
                 <div className="card-actions justify-end">
@@ -54,9 +56,9 @@ const ProductsTable = ({ products, page, setPage }: ProductsTableProps) => {
         })}
         <ImageUploadDialog
           onClose={() => {
-            productIdRef.current = undefined;
+            setProductId(undefined);
           }}
-          productId={productIdRef.current}
+          productId={productId}
         />
       </div>
       <table className={`table bg-neutral rounded-none ${isMobile ? 'w-full' : 'table-fixed w-[35rem]'}`}>

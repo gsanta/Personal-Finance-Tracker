@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	"strings"
 	"time"
 
 	dbpkg "github.com/gsanta/Personal-Finance-Tracker/internal/db"
@@ -35,6 +34,7 @@ type GenerateUploadURLRequest struct {
 }
 
 type GenerateUploadURLResponse struct {
+	AssetID   string `json:"assetId"`
 	UploadURL string `json:"uploadUrl"`
 	ObjectKey string `json:"objectKey"`
 	PublicURL string `json:"publicUrl"`
@@ -85,9 +85,10 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 	}
 
 	response := GenerateUploadURLResponse{
+		AssetID:   asset.ID,
 		UploadURL: uploadURL,
 		ObjectKey: objectKey,
-		PublicURL: h.storageService.GetPublicURL(objectKey),
+		PublicURL: storage.GetPublicURL(h.storageService.BucketName, objectKey),
 		Method:    method,
 	}
 
@@ -98,7 +99,7 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 // MediaFinalizeRequest payload from frontend after successful direct upload.
 // sizeBytes can be 0 if not known; we still store record.
 type MediaFinalizeRequest struct {
-	AssetId string `json:"assetId"`
+	ID string `json:"id"`
 }
 
 type MediaFinalizeResponse struct {
@@ -117,7 +118,7 @@ func NewMediaHandler(db *sql.DB, bucket string) *MediaHandler {
 }
 
 // Finalize handles POST /api/media/finalize
-// It records the uploaded object metadata in the database.
+// It updates the media asset status to 'uploaded' based on req.ID and returns its info.
 func (h *MediaHandler) Finalize(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -128,27 +129,28 @@ func (h *MediaHandler) Finalize(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
-
-	if strings.TrimSpace(req.ObjectKey) == "" {
-		http.Error(w, "objectKey required", http.StatusBadRequest)
+	if req.ID == "" {
+		http.Error(w, "missing id", http.StatusBadRequest)
 		return
 	}
 
-	asset := &dbpkg.MediaAsset{
-		ObjectKey:        req.ObjectKey,
-		OriginalFilename: req.OriginalFilename,
-		ContentType:      req.ContentType,
-		SizeBytes:        req.SizeBytes,
-	}
-	if err := dbpkg.InsertMediaAsset(h.DB, asset); err != nil {
-		http.Error(w, "failed to insert media asset: "+err.Error(), http.StatusInternalServerError)
+	asset, err := dbpkg.UpdateMediaAssetStatusAndReturn(h.DB, req.ID, "uploaded")
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "asset not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "failed to update asset status: "+err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
-	// Build public URL similarly to storage.GetPublicURL but duplicating minimal logic.
 	publicURL := buildPublicURL(h.Bucket, asset.ObjectKey)
+	resp := MediaFinalizeResponse{
+		ID:        asset.ID,
+		ObjectKey: asset.ObjectKey,
+		PublicURL: publicURL,
+	}
 
-	resp := MediaFinalizeResponse{ID: asset.ID, ObjectKey: asset.ObjectKey, PublicURL: publicURL}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }

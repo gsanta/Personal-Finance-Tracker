@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { api, mediaFinalizeUploadPath, mediaUploadPath } from '@/utils/apiRoutes';
-import { ChangeEvent, DragEvent, useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { AxiosResponse } from 'axios';
 import useDragAndDrop from '@/hooks/useDragAndDrop';
 import DragAndDrop from './DragAndDrop';
@@ -8,14 +8,21 @@ import DragAndDrop from './DragAndDrop';
 type UploadRequest = {
   fileName: string;
   contentType: string;
+  originalFileName: string;
   productId: string;
+  sizeBytes: number;
+};
+
+type UploadResponse = {
+  assetId: string;
+  uploadUrl: string;
+  objectKey: string;
+  method: string;
 };
 
 type FinalizeRequest = {
   contentType: string;
-  objectKey: string;
-  originalFileName: string;
-  sizeBytes: number;
+  id: string;
 };
 
 type ImageUploadDialogProps = {
@@ -35,13 +42,10 @@ const ImageUploadDialog = ({ onClose, productId }: ImageUploadDialogProps) => {
 
   const [uploading, setUploading] = useState(false);
 
-  const { mutateAsync: mutateUploadUrl } = useMutation<
-    AxiosResponse<{ uploadUrl: string; objectKey: string; method: string; productId: string }>,
-    unknown,
-    UploadRequest
-  >({
+  const { mutateAsync: mutateUploadUrl } = useMutation<UploadResponse, unknown, UploadRequest>({
     mutationFn: async (variables) => {
-      return api.post(mediaUploadPath, variables);
+      const data = await api.post<UploadResponse>(mediaUploadPath, variables);
+      return data?.data;
     },
   });
 
@@ -80,18 +84,19 @@ const ImageUploadDialog = ({ onClose, productId }: ImageUploadDialogProps) => {
       }
       try {
         setUploading(true);
-        const uploadUrl = await mutateUploadUrl({
+        const uploadData = await mutateUploadUrl({
           fileName: file.name,
           contentType: file.type,
-          productId: productId || '',
-        });
-        await mutateUploadFile({ url: uploadUrl.data.uploadUrl, file, method: uploadUrl.data.method });
-        await mutateFinalizeUpload({
-          contentType: file.type,
-          objectKey: uploadUrl.data.objectKey,
           originalFileName: file.name,
           sizeBytes: file.size,
+          productId: productId || '',
         });
+        await mutateUploadFile({ url: uploadData.uploadUrl, file, method: uploadData.method });
+        await mutateFinalizeUpload({
+          contentType: file.type,
+          id: uploadData.assetId,
+        });
+        handleClose();
       } finally {
         setUploading(false);
       }

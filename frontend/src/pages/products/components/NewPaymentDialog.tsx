@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import Product from '../types/Payment';
+import Product from '../types/Product';
 import { api, productsPath } from '@/utils/apiRoutes';
 
 type PaymentRequest = Pick<Product, 'name' | 'amount' | 'isIncome'>;
