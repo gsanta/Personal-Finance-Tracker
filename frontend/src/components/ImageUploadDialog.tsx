@@ -1,29 +1,6 @@
-import { useMutation } from '@tanstack/react-query';
-import { api, mediaFinalizeUploadPath, mediaUploadPath } from '@/utils/apiRoutes';
-import { useCallback, useRef, useState } from 'react';
-import { AxiosResponse } from 'axios';
 import useDragAndDrop from '@/hooks/useDragAndDrop';
 import DragAndDrop from './DragAndDrop';
-
-type UploadRequest = {
-  fileName: string;
-  contentType: string;
-  originalFileName: string;
-  productId: string;
-  sizeBytes: number;
-};
-
-type UploadResponse = {
-  assetId: string;
-  uploadUrl: string;
-  objectKey: string;
-  method: string;
-};
-
-type FinalizeRequest = {
-  contentType: string;
-  id: string;
-};
+import useUploadImage from '@/hooks/useUploadImage';
 
 type ImageUploadDialogProps = {
   onClose(): void;
@@ -31,8 +8,6 @@ type ImageUploadDialogProps = {
 };
 
 const ImageUploadDialog = ({ onClose, productId }: ImageUploadDialogProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleClose = () => {
     onClose();
     (document.getElementById('image-upload-dialog') as HTMLDialogElement)?.close();
@@ -40,72 +15,14 @@ const ImageUploadDialog = ({ onClose, productId }: ImageUploadDialogProps) => {
 
   const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
-  const [uploading, setUploading] = useState(false);
-
-  const { mutateAsync: mutateUploadUrl } = useMutation<UploadResponse, unknown, UploadRequest>({
-    mutationFn: async (variables) => {
-      const data = await api.post<UploadResponse>(mediaUploadPath, variables);
-      return data?.data;
-    },
-  });
-
-  const { mutateAsync: mutateFinalizeUpload } = useMutation<unknown, unknown, FinalizeRequest>({
-    mutationFn: async (variables) => {
-      return api.post(mediaFinalizeUploadPath, variables);
-    },
-  });
-
-  const { mutateAsync: mutateUploadFile } = useMutation<unknown, unknown, { file: File; url: string; method: string }>({
-    mutationFn: async ({ file, url, method }) => {
-      return api.request({
-        url,
-        method,
-        data: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-        onUploadProgress: () => {
-          // if (progressEvent.total) {
-          //   const progress = 30 + Math.round((progressEvent.loaded * 70) / progressEvent.total);
-          //   setUploadProgress(progress);
-          // }
-        },
-      });
-    },
-  });
-
-  const uploadFile = useCallback(
-    async (file: File | undefined | null) => {
-      if (!file) return;
-      if (!acceptedTypes.includes(file.type)) {
-        // Basic guard; server also validates.
-        alert('Unsupported file type. Please select an image.');
-        return;
-      }
-      try {
-        setUploading(true);
-        const uploadData = await mutateUploadUrl({
-          fileName: file.name,
-          contentType: file.type,
-          originalFileName: file.name,
-          sizeBytes: file.size,
-          productId: productId || '',
-        });
-        await mutateUploadFile({ url: uploadData.uploadUrl, file, method: uploadData.method });
-        await mutateFinalizeUpload({
-          contentType: file.type,
-          id: uploadData.assetId,
-        });
-        handleClose();
-      } finally {
-        setUploading(false);
-      }
-    },
-    [acceptedTypes, mutateFinalizeUpload, mutateUploadFile, mutateUploadUrl],
-  );
-
   const { handleFileInputChange, handleDragOver, handleDragLeave, handleDrop, isDragOver, file, setFile } =
     useDragAndDrop(['.jpeg', '.jpg', '.png', '.gif', '.webp']);
+
+  const { uploading, uploadFile } = useUploadImage({
+    acceptedTypes,
+    handleClose,
+    productId,
+  });
 
   return (
     <dialog id="image-upload-dialog" className="modal">

@@ -37,25 +37,33 @@ func main() {
 	}
 	defer gcsService.Close()
 
-	// pubsub
-	startCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// pubsub (increase timeout for emulator readiness)
+	startCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	cfg := pubsubinit.LoadConfig()
+	log.Printf("[pubsub-init] PROJECT_ID=%s topic=%s sub=%s emulator_host=%s", os.Getenv("PROJECT_ID"), cfg.TopicID, cfg.SubscriptionID, os.Getenv("PUBSUB_EMULATOR_HOST"))
 	resources, err := pubsubinit.EnsurePubSub(startCtx, cfg)
 	if err != nil {
 		log.Fatalf("pubsub init failed: %v", err)
 	}
+	log.Printf("[pubsub-init] client ready, starting subscriber")
 	defer resources.Client.Close()
 
 	go func() {
+		log.Printf("[pubsub-sub] starting Receive loop")
 		err := resources.Subscription.Receive(context.Background(), func(ctx context.Context, m *pubsub.Message) {
-			log.Printf("eventType=%s bucket=%s object=%s", m.Attributes["eventType"], m.Attributes["bucketId"], m.Attributes["objectId"])
-			// process m.Data (already decoded bytes)
+			eventType := m.Attributes["eventType"]
+			bucketId := m.Attributes["bucketId"]
+			objectId := m.Attributes["objectId"]
+			log.Printf("[pubsub-sub] message id=%s eventType=%s bucket=%s object=%s size=%d attrs=%v", m.ID, eventType, bucketId, objectId, len(m.Data), m.Attributes)
+			// TODO: parse m.Data JSON if needed for further processing
 			m.Ack()
 		})
 		if err != nil {
-			log.Printf("subscriber stopped: %v", err)
+			log.Printf("[pubsub-sub] stopped: %v", err)
+		} else {
+			log.Printf("[pubsub-sub] Receive loop ended without error")
 		}
 	}()
 

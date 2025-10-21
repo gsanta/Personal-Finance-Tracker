@@ -14,10 +14,12 @@ type UseGetProductsProps = {
   initialProducts: Products;
 };
 
+export const getProductsQueryKey = (page: string) => ['products', page];
+
 const useGetProducts = ({ page, initialProducts }: UseGetProductsProps) => {
   const [initialPage] = useState(page);
   const { data: products, refetch: refetchProducts } = useQuery<AxiosResponse<Products>, unknown, Products>({
-    queryKey: ['products', page],
+    queryKey: getProductsQueryKey(page),
     queryFn: async () => {
       const data = await api.get(
         productsPath({

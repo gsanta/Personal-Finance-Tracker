@@ -74,17 +74,32 @@ func main() {
 		log.Fatalf("failed to watch directory %s: %v", watchRoot, err)
 	}
 
+	// simple in-memory dedup map: filename -> last published time
+	published := make(map[string]time.Time)
+	publishOnce := func(path string) {
+		info, err := os.Stat(path)
+		if err != nil || !info.Mode().IsRegular() {
+			return
+		}
+		rel := strings.TrimPrefix(path, watchRoot)
+		rel = strings.TrimLeft(rel, string(os.PathSeparator))
+		last, ok := published[rel]
+		if ok && time.Since(last) < 2*time.Second {
+			// skip duplicate within window
+			return
+		}
+		publishFile(ctx, topic, watchRoot, bucketName, path)
+		published[rel] = time.Now()
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			log.Printf("[watcher] shutdown signal received")
 			return
 		case ev := <-watcher.Events:
-			if ev.Op&fsnotify.Create == fsnotify.Create {
-				publishIfRegular(ctx, topic, watchRoot, bucketName, ev.Name)
-			} else if ev.Op&fsnotify.Write == fsnotify.Write {
-				// Optionally handle writes if creation comes before file fully written.
-				publishIfRegular(ctx, topic, watchRoot, bucketName, ev.Name)
+			if ev.Op&fsnotify.Create == fsnotify.Create || ev.Op&fsnotify.Write == fsnotify.Write {
+				publishOnce(ev.Name)
 			}
 		case err := <-watcher.Errors:
 			log.Printf("[watcher] error: %v", err)
@@ -104,16 +119,17 @@ func initialScan(ctx context.Context, topic *pubsub.Topic, root, bucket string) 
 	})
 }
 
-func publishIfRegular(ctx context.Context, topic *pubsub.Topic, root, bucket, path string) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return
-	}
-	if !info.Mode().IsRegular() {
-		return
-	}
-	publishFile(ctx, topic, root, bucket, path)
-}
+// publishIfRegular now unused (replaced by publishOnce); retained for reference
+// func publishIfRegular(ctx context.Context, topic *pubsub.Topic, root, bucket, path string) {
+// 	info, err := os.Stat(path)
+// 	if err != nil {
+// 		return
+// 	}
+// 	if !info.Mode().IsRegular() {
+// 		return
+// 	}
+// 	publishFile(ctx, topic, root, bucket, path)
+// }
 
 func publishFile(ctx context.Context, topic *pubsub.Topic, root, bucket, fullPath string) {
 	rel := strings.TrimPrefix(fullPath, root)

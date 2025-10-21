@@ -33,7 +33,7 @@ services:
   pubsub-emulator:
     image: google/cloud-sdk:latest
     container_name: pubsub-emulator
-    command: gcloud beta emulators xpubsub start --host-port=0.0.0.0:8085
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
     ports:
       - "8085:8085"   # host:container
     environment:
@@ -62,26 +62,5 @@ services:
       - ./fake-gcs-data:/data:ro
     # Long-running watcher; restart on failure
     restart: unless-stopped
-      
-#  app:
-#    image: openjdk:21-jdk
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    ports:
-#      - "3012:3012"
-#    depends_on:
-#      - postgres
-#    volumes:
-#      - ./target/demo-0.0.1-SNAPSHOT.jar:/app/demo.jar
-#    working_dir: /app
-#    command: ["java", "-jar", "demo.jar"]
-#  frontend:
-#    image: node:20.11.1
-#    working_dir: /frontend
-#    volumes:
-#      - .:/frontend
-#    ports:
-#      - "3013:3013"
-#    command: /bin/sh -c "npm install && npm run dev"
 volumes:
   postgres_data:
