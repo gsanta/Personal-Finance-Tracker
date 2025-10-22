@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      - POSTGRES_USER=test-user
+      - POSTGRES_PASSWORD=test-pw
+      - POSTGRES_DB=cat_db_test
+    ports:
+      - 6502:5432

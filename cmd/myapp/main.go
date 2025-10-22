@@ -7,11 +7,10 @@ import (
 	"os"
 	"time"
 
-	"cloud.google.com/go/pubsub"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
-	"github.com/gsanta/Personal-Finance-Tracker/internal/pubsub"
+	pubsubinit "github.com/gsanta/Personal-Finance-Tracker/internal/pubsub"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/storage"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 	handlers "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers"
@@ -44,28 +43,16 @@ func main() {
 	cfg := pubsubinit.LoadConfig()
 	log.Printf("[pubsub-init] PROJECT_ID=%s topic=%s sub=%s emulator_host=%s", os.Getenv("PROJECT_ID"), cfg.TopicID, cfg.SubscriptionID, os.Getenv("PUBSUB_EMULATOR_HOST"))
 	resources, err := pubsubinit.EnsurePubSub(startCtx, cfg)
+
+	uploadSubscriber := pubsubinit.NewMediaUploadedSubscriber(db.DB, resources)
+
 	if err != nil {
 		log.Fatalf("pubsub init failed: %v", err)
 	}
 	log.Printf("[pubsub-init] client ready, starting subscriber")
 	defer resources.Client.Close()
-
-	go func() {
-		log.Printf("[pubsub-sub] starting Receive loop")
-		err := resources.Subscription.Receive(context.Background(), func(ctx context.Context, m *pubsub.Message) {
-			eventType := m.Attributes["eventType"]
-			bucketId := m.Attributes["bucketId"]
-			objectId := m.Attributes["objectId"]
-			log.Printf("[pubsub-sub] message id=%s eventType=%s bucket=%s object=%s size=%d attrs=%v", m.ID, eventType, bucketId, objectId, len(m.Data), m.Attributes)
-			// TODO: parse m.Data JSON if needed for further processing
-			m.Ack()
-		})
-		if err != nil {
-			log.Printf("[pubsub-sub] stopped: %v", err)
-		} else {
-			log.Printf("[pubsub-sub] Receive loop ended without error")
-		}
-	}()
+	cancelSub := uploadSubscriber.StartSubscriber(context.Background())
+	defer cancelSub()
 
 	// routes
 
@@ -86,11 +73,15 @@ func main() {
 	r.Get("/products", handlers.ProductsHandler)
 	r.Get("/summaries", web.SummariesHandler)
 	r.Get("/api/products", api.ProductsHandler) // JSON
+
+	mediaHandler := api.NewMediaHandler(db.DB, bucketName)
+
+	r.Get("/api/media/{id}", mediaHandler.GetMediaAsset)
+
 	//r.Post("/api/do_async", web.AsyncHandler)   // JSON API
 	uploadHandler := api.NewUploadHandler(db.DB, gcsService)
 	r.Post("/api/media/upload-url", uploadHandler.GenerateUploadURL)
 
-	mediaHandler := api.NewMediaHandler(db.DB, bucketName)
 	r.Post("/api/media/upload-finalize", mediaHandler.Finalize)
 
 	port := os.Getenv("PORT")

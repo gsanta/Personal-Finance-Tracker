@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
@@ -14,7 +15,8 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	products, total, err := db.GetAllProductsWithAssets(db.DB, page, itemsPerPage)
 
 	if err != nil {
-		// handle error (e.g., log or return HTTP 500)
+		log.Printf("ProductsHandler: failed to load products: %v", err)
+		web.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load products"})
 		return
 	}
 
@@ -28,5 +30,5 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		TotalCount: total,
 	}
 
-	web.WriteJSON(w, http.StatusAccepted, productsPresenter)
+    web.WriteJSON(w, http.StatusOK, productsPresenter)
 }

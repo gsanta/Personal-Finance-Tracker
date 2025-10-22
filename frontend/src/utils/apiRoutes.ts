@@ -59,3 +59,5 @@ export const monthlySummaryPath = (config?: Config): string => {
 export const mediaUploadPath = '/api/media/upload-url';
 
 export const mediaFinalizeUploadPath = '/api/media/upload-finalize';
+
+export const getMediaAssetPath = (id: string) => `/api/media/${id}`;

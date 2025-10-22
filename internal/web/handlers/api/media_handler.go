@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	dbpkg "github.com/gsanta/Personal-Finance-Tracker/internal/db"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/web/presenters"
 
 	"github.com/google/uuid"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/storage"
@@ -77,6 +80,7 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 		ContentType:      req.ContentType,
 		ProductId:        req.ProductId,
 		SizeBytes:        req.SizeBytes,
+		UploadStatus:     "uploading",
 	}
 
 	if err := dbpkg.InsertMediaAsset(h.DB, asset); err != nil {
@@ -115,6 +119,39 @@ type MediaHandler struct {
 
 func NewMediaHandler(db *sql.DB, bucket string) *MediaHandler {
 	return &MediaHandler{DB: db, Bucket: bucket}
+}
+
+type GetMediaAssetRequest struct {
+	ID string `json:"id"`
+}
+
+func (h *MediaHandler) GetMediaAsset(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "missing id", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("The id is: %s", id)
+
+	asset, err := dbpkg.GetMediaAsset(h.DB, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "media asset not found", http.StatusNotFound)
+		} else {
+			http.Error(w, fmt.Sprintf("failed to fetch media asset: %v", err), http.StatusInternalServerError)
+		}
+	}
+
+	presenter := presenters.NewMediaAssetPresenter(*asset)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(presenter)
 }
 
 // Finalize handles POST /api/media/finalize

@@ -4,12 +4,13 @@ import { createRoot } from 'react-dom/client';
 import '../index.css';
 import { camelCaseKeys } from './transformKeys';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 type ReactComponent = Parameters<typeof createElement>[0];
 
 declare global {
   interface Window {
-    pageProps: Record<string, any>;
+    pageProps: Record<string, unknown>;
   }
 }
 
@@ -20,6 +21,7 @@ export function renderPageComponent(Page: ReactComponent): void {
   const page = (
     <QueryClientProvider client={queryClient}>
       <Page {...camelizedProps} />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 

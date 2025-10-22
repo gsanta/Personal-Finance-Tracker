@@ -13,6 +13,7 @@
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
     "@eslint/js": "^9.35.0",
+    "@tanstack/react-query-devtools": "^5.90.2",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "autoprefixer": "^10.4.21",

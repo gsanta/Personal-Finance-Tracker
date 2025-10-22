@@ -6,6 +6,5 @@ CREATE TABLE media_assets (
     content_type TEXT,
     size_bytes BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    status TEXT NOT NULL DEFAULT 'uploaded'
-    -- Future: product_id UUID REFERENCES products(id),
+    upload_status TEXT
 );

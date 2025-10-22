@@ -1,7 +1,9 @@
 import { getProductsQueryKey } from '@/pages/products/hooks/useGetProducts';
-import { api, mediaUploadPath, mediaFinalizeUploadPath } from '@/utils/apiRoutes';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
+import MediaAsset from '@/pages/products/types/MediaAsset';
+import { api, mediaUploadPath, mediaFinalizeUploadPath, getMediaAssetPath } from '@/utils/apiRoutes';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosResponse } from 'axios';
+import { useState, useCallback, useEffect } from 'react';
 
 type UploadRequest = {
   fileName: string;
@@ -31,6 +33,7 @@ type UploadImageProps = {
 
 const useUploadImage = ({ acceptedTypes, handleClose, productId }: UploadImageProps) => {
   const [uploading, setUploading] = useState(false);
+  const [uploadedAssetId, setUploadedAssetId] = useState<string | null>(null);
 
   const { mutateAsync: mutateUploadUrl } = useMutation<UploadResponse, unknown, UploadRequest>({
     mutationFn: async (variables) => {
@@ -58,6 +61,16 @@ const useUploadImage = ({ acceptedTypes, handleClose, productId }: UploadImagePr
     },
   });
 
+  const { data: mediaAsset } = useQuery<AxiosResponse<MediaAsset>, unknown, MediaAsset>({
+    queryKey: ['media-assets', uploadedAssetId],
+    queryFn: async () => {
+      return api.get(getMediaAssetPath(uploadedAssetId!));
+    },
+    enabled: Boolean(uploadedAssetId),
+    select: (data) => data.data,
+    refetchInterval: 1000,
+  });
+
   const queryClient = useQueryClient();
 
   const uploadFile = useCallback(
@@ -77,23 +90,26 @@ const useUploadImage = ({ acceptedTypes, handleClose, productId }: UploadImagePr
           productId: productId || '',
         });
         await mutateUploadFile({ url: uploadData.uploadUrl, file, method: uploadData.method });
-        await mutateFinalizeUpload({
-          contentType: file.type,
-          id: uploadData.assetId,
-        });
-
-        const params = new URLSearchParams(window.location.search);
-        const page = params.get('page') ?? '1';
-
-        queryClient.invalidateQueries({ queryKey: getProductsQueryKey(page) });
-
-        handleClose();
+        setUploadedAssetId(uploadData.assetId);
       } finally {
         setUploading(false);
       }
     },
     [acceptedTypes, mutateFinalizeUpload, mutateUploadFile, mutateUploadUrl],
   );
+
+  useEffect(() => {
+    if (mediaAsset?.uploadStatus === 'uploaded') {
+      setUploadedAssetId(null);
+
+      const params = new URLSearchParams(window.location.search);
+      const page = params.get('page') ?? '';
+
+      queryClient.invalidateQueries({ queryKey: getProductsQueryKey(page) });
+
+      handleClose();
+    }
+  }, [mediaAsset]);
 
   return {
     uploading,

@@ -12,6 +12,7 @@ type MediaAssetPresenter struct {
 	OriginalFilename string `json:"originalFilename"`
 	PublicURL        string `json:"publicUrl"`
 	CreatedAt        string `json:"createdAt"`
+	UploadStatus     string `json:"uploadStatus"`
 }
 
 func NewMediaAssetPresenter(asset db.MediaAsset) MediaAssetPresenter {
@@ -23,5 +24,6 @@ func NewMediaAssetPresenter(asset db.MediaAsset) MediaAssetPresenter {
 		OriginalFilename: asset.OriginalFilename,
 		CreatedAt:        asset.CreatedAt,
 		PublicURL:        publicUrl,
+		UploadStatus:     asset.UploadStatus,
 	}
 }

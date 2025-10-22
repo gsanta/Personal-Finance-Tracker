@@ -26,9 +26,9 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	projectID := getenvDefault("PROJECT_ID", "demo-project")
-	topicID := getenvDefault("MEDIA_ASSET_TOPIC", "media-asset-created")
-	bucketName := getenvDefault("GCS_BUCKET_NAME", "dev-bucket")
+	projectID := getenvDefault("PROJECT_ID", "pubsub-dev-test")
+	topicID := getenvDefault("GCS_EVENTS_TOPIC", "gcs-object-events")
+	bucketName := getenvDefault("GCS_BUCKET_NAME", "personal-finance-uploads")
 	watchRoot := os.Getenv("WATCH_ROOT")
 	if watchRoot == "" {
 		log.Fatal("WATCH_ROOT env var is required")
@@ -59,19 +59,22 @@ func main() {
 
 	log.Printf("[watcher] starting for directory=%s topic=%s project=%s bucket=%s", watchRoot, topicID, projectID, bucketName)
 
-	// Initial scan publishes existing files (optional; comment out if undesired)
-	if err := initialScan(ctx, topic, watchRoot, bucketName); err != nil {
-		log.Printf("initial scan error: %v", err)
-	}
-
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatalf("failed to create watcher: %v", err)
 	}
 	defer watcher.Close()
 
-	if err := watcher.Add(watchRoot); err != nil {
-		log.Fatalf("failed to watch directory %s: %v", watchRoot, err)
+	if err := addWatchRecursive(watcher, watchRoot); err != nil {
+		log.Fatalf("failed to add recursive `watches under %s: %v", watchRoot, err)
+	}
+
+	// Allowed image extensions (lowercase, with leading dot)
+	allowedExt := map[string]struct{}{ ".jpeg": {}, ".jpg": {}, ".png": {}, ".gif": {}, ".webp": {} }
+	isAllowedImage := func(path string) bool {
+		ext := strings.ToLower(filepath.Ext(path))
+		_, ok := allowedExt[ext]
+		return ok
 	}
 
 	// simple in-memory dedup map: filename -> last published time
@@ -80,6 +83,9 @@ func main() {
 		info, err := os.Stat(path)
 		if err != nil || !info.Mode().IsRegular() {
 			return
+		}
+		if !isAllowedImage(path) {
+			return // ignore non-image files
 		}
 		rel := strings.TrimPrefix(path, watchRoot)
 		rel = strings.TrimLeft(rel, string(os.PathSeparator))
@@ -98,7 +104,18 @@ func main() {
 			log.Printf("[watcher] shutdown signal received")
 			return
 		case ev := <-watcher.Events:
-			if ev.Op&fsnotify.Create == fsnotify.Create || ev.Op&fsnotify.Write == fsnotify.Write {
+			// Directory created? add watch (and any nested existing structure)
+			if ev.Op&fsnotify.Create == fsnotify.Create {
+				// Attempt to stat to see if it's directory
+				if info, err := os.Stat(ev.Name); err == nil && info.IsDir() {
+					if err := addWatchRecursive(watcher, ev.Name); err != nil {
+						log.Printf("[watcher] failed adding new dir watch %s: %v", ev.Name, err)
+					}
+					// No publish for directories themselves
+					break
+				}
+			}
+			if ev.Op&(fsnotify.Create|fsnotify.Write) != 0 {
 				publishOnce(ev.Name)
 			}
 		case err := <-watcher.Errors:
@@ -107,29 +124,23 @@ func main() {
 	}
 }
 
-func initialScan(ctx context.Context, topic *pubsub.Topic, root, bucket string) error {
+// addWatchRecursive walks root and adds a watch for every directory encountered.
+// fsnotify does not natively watch recursively, so we manually add each directory.
+func addWatchRecursive(w *fsnotify.Watcher, root string) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.Mode().IsRegular() {
-			publishFile(ctx, topic, root, bucket, path)
+		if info.IsDir() {
+			if err := w.Add(path); err != nil {
+				return fmt.Errorf("add watch for %s: %w", path, err)
+			}
+			log.Printf("[watcher] watching dir: %s", path)
 		}
 		return nil
 	})
 }
 
-// publishIfRegular now unused (replaced by publishOnce); retained for reference
-// func publishIfRegular(ctx context.Context, topic *pubsub.Topic, root, bucket, path string) {
-// 	info, err := os.Stat(path)
-// 	if err != nil {
-// 		return
-// 	}
-// 	if !info.Mode().IsRegular() {
-// 		return
-// 	}
-// 	publishFile(ctx, topic, root, bucket, path)
-// }
 
 func publishFile(ctx context.Context, topic *pubsub.Topic, root, bucket, fullPath string) {
 	rel := strings.TrimPrefix(fullPath, root)
