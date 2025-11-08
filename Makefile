@@ -17,3 +17,13 @@ reset-fake-gcs-light:
 	@docker compose up -d $(FAKE_GCS_SERVICE)
 	@echo "[reset] Done. Current object files:" 
 	@find $(FAKE_GCS_BUCKET_DIR) -type f | sed 's/^/  /' || true
+
+.PHONY: test-compose-up
+# Start the test docker compose stack
+start-test-env:
+	docker compose -f docker-compose.test.yml up -d
+
+stop-test-env:
+	docker compose -f docker-compose.test.yml down
+
+

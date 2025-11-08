@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/tests"
 )
 
@@ -15,9 +16,22 @@ var testDB *sql.DB
 
 // TestMain orchestrates test environment setup.
 func TestMain(m *testing.M) {
+	// Change to project root so relative paths (templates, migrations) work
+	if err := os.Chdir(tests.FindProjectRoot()); err != nil {
+		log.Fatalf("failed to chdir to project root: %v", err)
+	}
+
 	tests.LoadTestEnv()
 	testDB = tests.ConnectTestDB()
+
+	// Assign to global db.DB so handlers can use it
+	db.DB = testDB
+
 	tests.ApplyMigrations(testDB)
+	// Ensure a clean state before seeding to avoid cross-package duplicates
+	if _, err := testDB.Exec("TRUNCATE TABLE media_assets, products RESTART IDENTITY CASCADE"); err != nil {
+		log.Fatalf("failed to truncate tables: %v", err)
+	}
 	if err := tests.Seed(testDB); err != nil {
 		log.Fatalf("seeding failed: %v", err)
 	}
@@ -27,31 +41,55 @@ func TestMain(m *testing.M) {
 }
 
 func TestProductsHandler(t *testing.T) {
-	// Create a request to pass to our handler. We don't have any query parameters for now, so "/" is fine.
+	// Create a request to pass to our handler
 	req, err := http.NewRequest("GET", "/products", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(ProductsHandler)
 
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
 	handler.ServeHTTP(rr, req)
 
-	// Check the status code is what we expect.
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
 
-	//// Check the response body is what we expect.
-	//// In this case, we're checking if the rendered HTML contains our test product's name.
-	//body := rr.Body.String()
-	//if !strings.Contains(body, product.Name) {
-	//	t.Errorf("handler returned unexpected body: got %v does not contain %v",
-	//		body, product.Name)
-	//}
+	pageProps := tests.ExtractPageProps(t, rr.Body.String())
+
+	products, ok := pageProps["products"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("pageProps.products is not a map, got type: %T, value: %v", pageProps["products"], pageProps["products"])
+	}
+
+	totalCount := tests.ParseInt(t, products["totalCount"])
+
+	if totalCount != 2 {
+		t.Errorf("expected totalCount = 2, got %v", totalCount)
+	}
+
+	items, ok := products["items"].([]interface{})
+	if !ok {
+		t.Fatalf("products.Items is not an array")
+	}
+
+	if len(items) != 2 {
+		t.Errorf("expected 2 items, got %d", len(items))
+	}
+
+	firstProduct := items[0].(map[string]interface{})
+	if _, ok := firstProduct["id"]; !ok {
+		t.Errorf("first product missing id field")
+	}
+
+	name, ok := firstProduct["name"]
+	if !ok {
+		t.Errorf("first product missing name field")
+	}
+
+	if name != "Sample Product A" {
+		t.Errorf("expected first product name to be 'Sample Product A', got %v", name)
+	}
 }

@@ -15,23 +15,85 @@ import (
 
 var TestDB *sql.DB
 
-func LoadTestEnv() {
-	cwd, _ := os.Getwd()
-	paths := []string{
-		filepath.Join(cwd, "test.env"),             // running from repo root
-		filepath.Join(cwd, "..", "..", "test.env"), // running from subpackage
-		"test.env",
+// Seed fixtures exposed for easy reuse in tests.
+// These reflect the rows inserted by Seed().
+// Use helpers like FirstProduct() or FirstMediaAsset() in tests.
+
+type SeedProduct struct {
+	ID       string
+	Name     string
+	Price    float64
+	Quantity int
+}
+
+type SeedMediaAsset struct {
+	ID               string
+	ObjectKey        string
+	OriginalFilename string
+	ContentType      string
+	SizeBytes        int64
+	ProductID        string
+	UploadStatus     string
+}
+
+var SeedProducts = []SeedProduct{
+	{ID: "d4665bf0-cc0f-4488-99ae-82e32177a3bf", Name: "Sample Product A", Price: 12.34, Quantity: 5},
+	{ID: "00772abc-ee2a-497c-b1a6-64a7f02f927c", Name: "Sample Product B", Price: 45.67, Quantity: 3},
+}
+
+var SeedMediaAssets = []SeedMediaAsset{
+	{
+		ID:               "b817883b-0ca1-40ba-898c-cf94065c1187",
+		ObjectKey:        "uploads/test-media-123/image.jpg",
+		OriginalFilename: "image.jpg",
+		ContentType:      "image/jpeg",
+		SizeBytes:        1024,
+		ProductID:        "d4665bf0-cc0f-4488-99ae-82e32177a3bf",
+		UploadStatus:     "completed",
+	},
+}
+
+func FirstProduct() SeedProduct { return SeedProducts[0] }
+func SecondProduct() SeedProduct { return SeedProducts[1] }
+func FirstMediaAsset() SeedMediaAsset { return SeedMediaAssets[0] }
+
+// FindProjectRoot walks up from the current directory until it finds go.mod (project root marker).
+func FindProjectRoot() string {
+	startDir, _ := os.Getwd()
+	dir := startDir
+	for {
+		candidate := filepath.Join(dir, "go.mod")
+		if st, err := os.Stat(candidate); err == nil && !st.IsDir() {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir { // reached filesystem root
+			log.Fatalf("could not find project root (go.mod) walking up from %s", startDir)
+		}
+		dir = parent
 	}
-	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
-			if err := godotenv.Overload(p); err != nil {
-				log.Printf("[test-setup] found but couldn't load %s: %v", p, err)
+}
+
+func LoadTestEnv() {
+	startDir, _ := os.Getwd()
+	dir := startDir
+	for {
+		candidate := filepath.Join(dir, "test.env")
+		if st, err := os.Stat(candidate); err == nil && !st.IsDir() {
+			if err := godotenv.Overload(candidate); err != nil {
+				log.Printf("[test-setup] found but couldn't load %s: %v", candidate, err)
+			} else {
+				log.Printf("[test-setup] loaded env from %s", candidate)
 			}
-			log.Printf("[test-setup] loaded env from %s", p)
 			return
 		}
+		parent := filepath.Dir(dir)
+		if parent == dir { // reached filesystem root
+			break
+		}
+		dir = parent
 	}
-	log.Printf("[test-setup] no test.env found; relying on existing environment")
+	log.Printf("[test-setup] no test.env found walking up from %s; relying on existing environment", startDir)
 }
 
 func ConnectTestDB() *sql.DB {
@@ -54,11 +116,43 @@ func ConnectTestDB() *sql.DB {
 
 // applyMigrations runs the SQL files in db/migrations in lexicographic order.
 func ApplyMigrations(db *sql.DB) {
-	migDir := filepath.Join("db", "migrations")
-	entries, err := os.ReadDir(migDir)
-	if err != nil {
-		log.Fatalf("failed to read migrations dir: %v", err)
+	startDir, _ := os.Getwd()
+	dir := startDir
+
+	var migDir string
+
+	for {
+		candidate := filepath.Join(dir, "db", "migrations")
+		if st, err := os.Stat(candidate); err == nil && st.IsDir() {
+			migDir = candidate
+			break
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir { // reached filesystem root
+			break
+		}
+		dir = parent
 	}
+
+	entries, entriesErr := os.ReadDir(migDir)
+
+	if entriesErr != nil {
+		log.Fatalf("failed to read migrations dir: %v", entriesErr)
+	}
+
+	// First, check if migrations have already been applied by looking for products table
+	var tableExists bool
+	err := db.QueryRow(`SELECT EXISTS (
+		SELECT FROM information_schema.tables 
+		WHERE table_schema = 'public' 
+		AND table_name = 'products'
+	)`).Scan(&tableExists)
+
+	if err == nil && tableExists {
+		log.Printf("[test-setup] tables already exist, skipping migrations")
+		return
+	}
+
 	var files []string
 	for _, e := range entries {
 		if e.IsDir() {
@@ -84,16 +178,28 @@ func ApplyMigrations(db *sql.DB) {
 	}
 }
 
-// Seed inserts baseline test data.
+// Seed inserts baseline test data consistent with the exported fixtures above.
 func Seed(db *sql.DB) error {
-	// simple cleanup to avoid duplication
-	_, _ = db.Exec("DELETE FROM media_assets")
-	_, _ = db.Exec("DELETE FROM products")
 	// seed products
-	_, err := db.Exec(`INSERT INTO products (name, price, quantity) VALUES 
-		('Sample Product A', 12.34, 5),
-		('Sample Product B', 45.67, 3)`)
-	if err != nil {
+	if _, err := db.Exec(
+		`INSERT INTO products (id, name, price, quantity) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)`,
+		SeedProducts[0].ID, SeedProducts[0].Name, SeedProducts[0].Price, SeedProducts[0].Quantity,
+		SeedProducts[1].ID, SeedProducts[1].Name, SeedProducts[1].Price, SeedProducts[1].Quantity,
+	); err != nil {
+		return err
+	}
+
+	// seed one media asset referencing first product
+	if _, err := db.Exec(
+		`INSERT INTO media_assets (id, object_key, original_filename, content_type, size_bytes, product_id, upload_status) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+		SeedMediaAssets[0].ID,
+		SeedMediaAssets[0].ObjectKey,
+		SeedMediaAssets[0].OriginalFilename,
+		SeedMediaAssets[0].ContentType,
+		SeedMediaAssets[0].SizeBytes,
+		SeedMediaAssets[0].ProductID,
+		SeedMediaAssets[0].UploadStatus,
+	); err != nil {
 		return err
 	}
 	return nil

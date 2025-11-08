@@ -20,7 +20,7 @@ type MediaAsset struct {
 	OriginalFilename string
 	ContentType      string
 	SizeBytes        int64
-	ProductId        string
+	ProductId        sql.NullString
 	UploadStatus     string
 	CreatedAt        string // could use time.Time, kept string for simplicity consistent with Product
 }
@@ -186,7 +186,7 @@ LIMIT $1 OFFSET $2;`
 				OriginalFilename: assetOriginalFilename.String,
 				ContentType:      assetContentType.String,
 				SizeBytes:        assetSizeBytes.Int64,
-				ProductId:        pid,
+				ProductId:        sql.NullString{String: pid, Valid: true},
 				UploadStatus:     assetStatus.String,
 				CreatedAt:        assetCreatedAt.String,
 			}

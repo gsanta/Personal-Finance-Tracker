@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -17,16 +18,18 @@ import (
 	"github.com/gsanta/Personal-Finance-Tracker/internal/storage"
 )
 
-type UploadHandler struct {
-	DB             *sql.DB
-	storageService *storage.GCSService
+type StorageSigner interface {
+	GenerateSignedUploadURL(ctx context.Context, objectName string, contentType string) (method string, url string, err error)
 }
 
-func NewUploadHandler(db *sql.DB, storageService *storage.GCSService) *UploadHandler {
-	return &UploadHandler{
-		DB:             db,
-		storageService: storageService,
-	}
+type MediaHandler struct {
+	DB             *sql.DB
+	Bucket         string
+	storageService StorageSigner
+}
+
+func NewMediaHandler(db *sql.DB, bucket string, storageService StorageSigner) *MediaHandler {
+	return &MediaHandler{DB: db, Bucket: bucket, storageService: storageService}
 }
 
 type GenerateUploadURLRequest struct {
@@ -45,7 +48,7 @@ type GenerateUploadURLResponse struct {
 }
 
 // GenerateUploadURL handles POST /api/media/upload-url
-func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request) {
+func (h *MediaHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -57,17 +60,14 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Validate content type
 	if !isValidImageType(req.ContentType) {
 		http.Error(w, "Invalid content type. Only images allowed", http.StatusBadRequest)
 		return
 	}
 
-	// Generate unique object name
 	ext := filepath.Ext(req.FileName)
 	objectKey := fmt.Sprintf("uploads/%d/%s%s", time.Now().Unix(), uuid.New().String(), ext)
 
-	// Generate signed URL
 	method, uploadURL, err := h.storageService.GenerateSignedUploadURL(r.Context(), objectKey, req.ContentType)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to generate upload URL: %v", err), http.StatusInternalServerError)
@@ -78,7 +78,7 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 		ObjectKey:        objectKey,
 		OriginalFilename: req.FileName,
 		ContentType:      req.ContentType,
-		ProductId:        req.ProductId,
+		ProductId:        sql.NullString{String: req.ProductId, Valid: req.ProductId != ""},
 		SizeBytes:        req.SizeBytes,
 		UploadStatus:     "uploading",
 	}
@@ -92,7 +92,7 @@ func (h *UploadHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request
 		AssetID:   asset.ID,
 		UploadURL: uploadURL,
 		ObjectKey: objectKey,
-		PublicURL: storage.GetPublicURL(h.storageService.BucketName, objectKey),
+		PublicURL: storage.GetPublicURL(h.Bucket, objectKey),
 		Method:    method,
 	}
 
@@ -110,15 +110,6 @@ type MediaFinalizeResponse struct {
 	ID        string `json:"id"`
 	ObjectKey string `json:"objectKey"`
 	PublicURL string `json:"publicUrl"`
-}
-
-type MediaHandler struct {
-	DB     *sql.DB
-	Bucket string
-}
-
-func NewMediaHandler(db *sql.DB, bucket string) *MediaHandler {
-	return &MediaHandler{DB: db, Bucket: bucket}
 }
 
 type GetMediaAssetRequest struct {
@@ -146,6 +137,7 @@ func (h *MediaHandler) GetMediaAsset(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, fmt.Sprintf("failed to fetch media asset: %v", err), http.StatusInternalServerError)
 		}
+		return
 	}
 
 	presenter := presenters.NewMediaAssetPresenter(*asset)
@@ -154,9 +146,9 @@ func (h *MediaHandler) GetMediaAsset(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(presenter)
 }
 
-// Finalize handles POST /api/media/finalize
+// FinalizeUploadMediaAsset handles POST /api/media/finalize
 // It updates the media asset status to 'uploaded' based on req.ID and returns its info.
-func (h *MediaHandler) Finalize(w http.ResponseWriter, r *http.Request) {
+func (h *MediaHandler) FinalizeUploadMediaAsset(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
