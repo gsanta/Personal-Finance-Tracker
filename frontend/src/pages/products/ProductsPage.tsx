@@ -15,14 +15,12 @@ const ProductsPage = ({ products: initialProducts }: ProductsPageProps) => {
   return (
     <Page>
       <div className="flex flex-col gap-4 items-center p-6">
-        <div className="flex gap-4 items-start">
-          <div className="card shadow-xl">
-            <ProductsTable
-              products={products}
-              page={Number(page)}
-              setPage={(newPage: number) => setPage(String(newPage))}
-            />
-          </div>
+        <div className="flex gap-4 items-start w-full">
+          <ProductsTable
+            products={products}
+            page={Number(page)}
+            setPage={(newPage: number) => setPage(String(newPage))}
+          />
         </div>
       </div>
     </Page>

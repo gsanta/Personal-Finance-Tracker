@@ -27,6 +27,10 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(products) > 0 {
+		log.Printf("[ProductsHandler] first product media assets count: %d", len(products[0].MediaAssets))
+	}
+
 	var presentedProducts []presenters.ProductPresenter
 	for _, p := range products {
 		presentedProducts = append(presentedProducts, presenters.NewProductPresenter(p))

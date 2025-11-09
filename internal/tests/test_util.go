@@ -44,7 +44,16 @@ var SeedProducts = []SeedProduct{
 var SeedMediaAssets = []SeedMediaAsset{
 	{
 		ID:               "b817883b-0ca1-40ba-898c-cf94065c1187",
-		ObjectKey:        "uploads/test-media-123/image.jpg",
+		ObjectKey:        "uploads/1762722812/75014105-27ee-4eaf-8060-3315af8b64c2.jpg",
+		OriginalFilename: "image.jpg",
+		ContentType:      "image/jpeg",
+		SizeBytes:        1024,
+		ProductID:        "d4665bf0-cc0f-4488-99ae-82e32177a3bf",
+		UploadStatus:     "completed",
+	},
+	{
+		ID:               "b817883b-0ca1-40ba-898c-cf94065c1187",
+		ObjectKey:        "uploads/1762722812/75014105-27ee-4eaf-8060-3315af8b64c2.jpg",
 		OriginalFilename: "image.jpg",
 		ContentType:      "image/jpeg",
 		SizeBytes:        1024,
@@ -53,8 +62,8 @@ var SeedMediaAssets = []SeedMediaAsset{
 	},
 }
 
-func FirstProduct() SeedProduct { return SeedProducts[0] }
-func SecondProduct() SeedProduct { return SeedProducts[1] }
+func FirstProduct() SeedProduct       { return SeedProducts[0] }
+func SecondProduct() SeedProduct      { return SeedProducts[1] }
 func FirstMediaAsset() SeedMediaAsset { return SeedMediaAssets[0] }
 
 // FindProjectRoot walks up from the current directory until it finds go.mod (project root marker).
