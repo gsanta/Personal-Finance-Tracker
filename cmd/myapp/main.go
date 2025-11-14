@@ -72,6 +72,7 @@ func main() {
 	// routes
 	r.Get("/products", handlers.ProductsHandler)
 	r.Get("/summaries", web.SummariesHandler)
+	r.Get("/bookings", handlers.BookingsHandler)
 	r.Get("/api/products", api.ProductsHandler) // JSON
 
 	mediaHandler := api.NewMediaHandler(db.DB, bucketName, gcsService)

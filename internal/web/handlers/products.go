@@ -3,20 +3,15 @@ package web
 import (
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web/presenters"
 )
 
-var (
-	tplOnce sync.Once
-)
-
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[ProductsHandler] called: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
-	tplOnce.Do(web.LoadTemplates)
+	web.EnsureTemplates()
 
 	page, itemsPerPage := web.ParsePaginationParams(r)
 

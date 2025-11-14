@@ -27,6 +27,12 @@ func LoadTemplates() {
 	}).ParseGlob(filepath.Join("internal", "web", "templates", "*.html")))
 }
 
+// EnsureTemplates guarantees templates are parsed exactly once in a thread-safe way.
+// Call this from any handler that needs templates before rendering.
+func EnsureTemplates() {
+	tplOnce.Do(LoadTemplates)
+}
+
 func RenderPage(w http.ResponseWriter, r *http.Request, pageProps interface{}) {
 	if manifestClient == nil {
 		manifestClient = NewManifestClient(os.Getenv("MANIFEST_HOST"))
