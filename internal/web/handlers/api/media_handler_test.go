@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	dbpkg "github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/tests"
 )
@@ -32,10 +31,6 @@ func TestGetMediaAsset(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	rctx := chi.NewRouteContext()
-	rctx.URLParams.Add("id", expectedID)
-	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 	rr := httptest.NewRecorder()
 

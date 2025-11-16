@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gin-gonic/gin"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/auth"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	pubsubinit "github.com/gsanta/Personal-Finance-Tracker/internal/pubsub"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/storage"
@@ -54,34 +54,42 @@ func main() {
 	cancelSub := uploadSubscriber.StartSubscriber(context.Background())
 	defer cancelSub()
 
-	// routes
+	// router (gin)
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.Default() // includes Logger and Recovery
 
-	r := chi.NewRouter()
-
-	// middlewares
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
+	// auth (optional)
+	aboss, err := auth.Setup(r, db.DB)
+	if err != nil {
+		log.Fatalf("auth setup failed: %v", err)
+	}
+	// If auth is enabled, load client-state for all routes so handlers can read session
+	if aboss != nil {
+		r.Use(auth.GinLoadClientState(aboss))
+	}
 
 	// static files
-	fs := http.FileServer(http.Dir("./internal/web/static"))
-	r.Handle("/static/*", http.StripPrefix("/static/", fs))
+	r.Static("/static", "./internal/web/static")
 
 	// routes
-	r.Get("/products", handlers.ProductsHandler)
-	r.Get("/summaries", web.SummariesHandler)
-	r.Get("/bookings", handlers.BookingsHandler)
-	r.Get("/api/products", api.ProductsHandler) // JSON
+	r.GET("/products", gin.WrapF(handlers.ProductsHandler))
+	r.GET("/summaries", gin.WrapF(web.SummariesHandler))
+	r.GET("/bookings", gin.WrapF(handlers.BookingsHandler))
+	r.GET("/profile", gin.WrapH(auth.RequireAuth(aboss, http.HandlerFunc(handlers.ProfileHandler))))
+	r.GET("/home", gin.WrapF(handlers.HomeHandler))
+	r.GET("/api/products", gin.WrapF(api.ProductsHandler)) // JSON
+	// 404 route (HTML/JSON)
+	r.GET("/not_found", gin.WrapF(handlers.NotFoundHandler))
 
 	mediaHandler := api.NewMediaHandler(db.DB, bucketName, gcsService)
 
-	r.Get("/api/media/{id}", mediaHandler.GetMediaAsset)
+	// param route
+	r.GET("/api/media/:id", func(c *gin.Context) {
+		mediaHandler.ServeGetMediaAssetByID(c.Writer, c.Request, c.Param("id"))
+	})
 
-	r.Post("/api/media/upload-url", mediaHandler.GenerateUploadURL)
-
-	r.Post("/api/media/upload-finalize", mediaHandler.FinalizeUploadMediaAsset)
+	r.POST("/api/media/upload-url", gin.WrapF(mediaHandler.GenerateUploadURL))
+	r.POST("/api/media/upload-finalize", gin.WrapF(mediaHandler.FinalizeUploadMediaAsset))
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -89,7 +97,9 @@ func main() {
 	}
 
 	log.Printf("listening on %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	if err := r.Run(":" + port); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getEnv(k, d string) string {

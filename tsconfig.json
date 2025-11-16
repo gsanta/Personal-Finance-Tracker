@@ -9,8 +9,8 @@
 
     "target": "es6",
     "lib": ["es6", "dom"],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "sourceMap": true,
 
     "allowJs": true,

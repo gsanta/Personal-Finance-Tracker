@@ -8,9 +8,9 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	dbpkg "github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web/presenters"
 
@@ -122,12 +122,24 @@ func (h *MediaHandler) GetMediaAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := chi.URLParam(r, "id")
+	// Support multiple ways to provide the id so this handler works with different routers:
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		path := r.URL.Path
+		if idx := strings.LastIndex(path, "/"); idx >= 0 && idx < len(path)-1 {
+			id = path[idx+1:]
+		}
+	}
 	if id == "" {
 		http.Error(w, "missing id", http.StatusBadRequest)
 		return
 	}
 
+	h.ServeGetMediaAssetByID(w, r, id)
+}
+
+// ServeGetMediaAssetByID exposes fetching by ID directly so routers like gin can pass path params easily.
+func (h *MediaHandler) ServeGetMediaAssetByID(w http.ResponseWriter, r *http.Request, id string) {
 	log.Printf("The id is: %s", id)
 
 	asset, err := dbpkg.GetMediaAsset(h.DB, id)

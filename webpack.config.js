@@ -49,17 +49,6 @@ function cssLoader() {
   const loaders = [];
   loaders.push(MiniCssExtractPlugin.loader);
   loaders.push('css-loader');
-  loaders.push({
-    loader: 'postcss-loader',
-    options: {
-      postcssOptions: {
-        plugins: [
-          'tailwindcss',
-          'autoprefixer',
-        ],
-      },
-    },
-  });
   return loaders;
 }
 

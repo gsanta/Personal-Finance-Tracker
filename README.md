@@ -135,3 +135,91 @@ curl -v -X PUT "<uploadUrl from JSON>" \
 | `GCS_BUCKET_NAME` | Bucket name used for uploads | `personal-finance-uploads` |
 
 Emulator data (including object bytes) now persists under `./fake-gcs-data`.
+
+# Personal Finance Tracker
+
+## Email registration/login using Authboss (Gin + Postgres)
+
+This project now supports email/password registration and login using Authboss.
+It’s wired in behind a feature flag so your app remains unchanged until enabled.
+
+### 1) Database migration
+Create the users table (email unique, password hash stored):
+
+- Run your normal migration process to apply: db/migrations/000004_create_users_table.up.sql
+
+Table: Users
+- id (TEXT, primary key)
+- email (TEXT, unique)
+- password (TEXT, bcrypt hash)
+- created_at, updated_at timestamps
+
+### 2) Enable Authboss
+Set these environment variables (e.g., in dev.env):
+
+- AUTH_ENABLE=true
+- ROOT_URL=http://localhost:3012
+- SESSION_STORE_KEY=some-long-random-string
+- COOKIE_STORE_KEY=some-other-long-random-string
+- SESSION_HASH_KEY (optional; falls back to SESSION_STORE_KEY)
+- SESSION_BLOCK_KEY (optional; AES key must be 16/24/32 bytes, otherwise encryption is disabled)
+- COOKIE_HASH_KEY (optional; falls back to COOKIE_STORE_KEY or SESSION_HASH_KEY)
+- COOKIE_BLOCK_KEY (optional; AES key must be 16/24/32 bytes, otherwise encryption is disabled)
+
+Notes:
+- Hash keys (HMAC) can be any reasonably long random byte string (32–64 bytes recommended).
+- Block keys are for AES encryption; valid sizes are exactly 16, 24, or 32 bytes. If invalid, the app logs a warning and proceeds without encryption instead of panicking.
+
+Then start the app as usual. When AUTH_ENABLE=true, routes mount under /auth.
+
+### 3) Routes
+Authboss is mounted under /auth and exposes handlers for register/login/logout.
+
+- POST /auth/register
+  Body fields (application/x-www-form-urlencoded or JSON):
+  - email (used as PID)
+  - password
+
+- POST /auth/login
+  Body fields:
+  - email
+  - password
+
+- POST /auth/logout
+
+By default, Authboss expects form-encoded fields (email, password). You can send JSON and Gin will pass it through, but classic form encoding is recommended unless you add a custom responder.
+
+### 4) Example curl
+Register:
+
+curl -i -X POST http://localhost:3012/auth/register \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data 'email=test@example.com&password=secret123'
+
+Login:
+
+curl -i -X POST http://localhost:3012/auth/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data 'email=test@example.com&password=secret123'
+
+Logout:
+
+curl -i -X POST http://localhost:3012/auth/logout
+
+Note: Authboss returns redirects and uses session cookies. For pure-JSON APIs, you can customize ab.Config.Core.Redirector/Responder and provide your own ViewRenderer with JSON responses.
+
+### 5) Implementation details
+- internal/auth/authboss_setup.go
+  - Implements a minimal Postgres-backed storer (create/load/save) using the Users table; email is the PID.
+  - Configures client state via authboss-clientstate (sessions + cookies).
+  - Imports modules for side effects (auth, register, logout) and mounts Authboss under /auth in Gin.
+  - Controlled via AUTH_ENABLE env variable.
+
+- cmd/myapp/main.go
+  - Calls auth.Setup(r, db.DB) which conditionally mounts /auth routes if AUTH_ENABLE=true.
+
+### 6) Notes / next steps
+- Email verification, password recovery, lockouts, etc., can be enabled by adding corresponding columns to Users and turning on modules.
+- If you want HTML forms, provide templates and a renderer; otherwise the defaults perform redirects.
+- Adjust bcrypt cost with ab.Config.Modules.BCryptCost if needed.
+- Ensure SESSION_STORE_KEY and COOKIE_STORE_KEY are long, random, and kept secret in production.

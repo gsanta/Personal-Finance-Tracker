@@ -56,6 +56,10 @@ export const monthlySummaryPath = (config?: Config): string => {
   return pathWithConfig('/api/summary/monthly', config);
 };
 
+export const registerPath = '/auth/register';
+
+export const loginPath = '/auth/login';
+
 export const mediaUploadPath = '/api/media/upload-url';
 
 export const mediaFinalizeUploadPath = '/api/media/upload-finalize';
