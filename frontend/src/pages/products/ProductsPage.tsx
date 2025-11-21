@@ -1,9 +1,19 @@
 import Page from '@/components/Page';
 import { Box, Text } from '@chakra-ui/react';
+import Calendar from 'react-calendar';
+import { useState } from 'react';
+import 'react-calendar/dist/Calendar.css';
+
+type ValuePiece = Date | null;
+
+type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 const ProductsPage = () => {
+  const [value, onChange] = useState<Value>(new Date());
+
   return (
     <Page>
+      <Calendar onChange={onChange} value={value} />
       <div className="flex flex-col gap-4 items-center p-6">
         <div className="flex gap-4 items-start w-full">
           {/* Dummy content box for testing sticky behavior */}

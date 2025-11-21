@@ -72,6 +72,9 @@ func main() {
 	r.Static("/static", "./internal/web/static")
 
 	// routes
+	// Redirect root to /home
+	r.GET("/", func(c *gin.Context) { c.Redirect(http.StatusFound, "/home") })
+	
 	r.GET("/products", gin.WrapF(handlers.ProductsHandler))
 	r.GET("/summaries", gin.WrapF(web.SummariesHandler))
 	r.GET("/bookings", gin.WrapF(handlers.BookingsHandler))

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import flatten from 'lodash/flatten';
-import { snakeCaseKeys, camelCaseKeys } from './transformKeys';
+import { camelCaseKeys } from './transformKeys';
 
 export const transformResponse = flatten([axios.defaults.transformResponse || [], camelCaseKeys]);
 // const transformRequest = flatten([snakeCaseKeys, axios.defaults.transformRequest || []]);
@@ -59,6 +59,8 @@ export const monthlySummaryPath = (config?: Config): string => {
 export const registerPath = '/auth/register';
 
 export const loginPath = '/auth/login';
+
+export const logoutPath = '/auth/logout';
 
 export const mediaUploadPath = '/api/media/upload-url';
 

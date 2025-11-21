@@ -14,6 +14,9 @@ import { Input } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import useRegister from '@/hooks/useRegister';
 import useLogin from '@/hooks/useLogin';
+import { useState } from 'react';
+import { Alert } from '../alert';
+import ErrorMessage from '../ErrorMessage';
 
 type LoginFormData = {
   email: string;
@@ -21,6 +24,8 @@ type LoginFormData = {
 };
 
 const LoginDialog = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -32,16 +37,27 @@ const LoginDialog = () => {
     },
   });
 
-  const { login: loginUser } = useLogin();
+  const { login: loginUser, loginError, resetLogin } = useLogin();
 
-  const onSubmit = ({ email, password }: LoginFormData) => {
-    loginUser({ email, password });
+  const onClose = () => {
+    setIsOpen(false);
+    resetForm();
+    resetLogin();
+  };
+
+  const onSubmit = async ({ email, password }: LoginFormData) => {
+    try {
+      await loginUser({ email, password });
+      onClose();
+    } catch {
+      // stop propagation
+    }
   };
 
   return (
-    <DialogRoot>
+    <DialogRoot open={isOpen}>
       <DialogTrigger asChild>
-        <Button colorPalette="yellow" variant="solid">
+        <Button colorPalette="yellow" onClick={() => setIsOpen(true)} variant="solid">
           Login
         </Button>
       </DialogTrigger>
@@ -55,10 +71,12 @@ const LoginDialog = () => {
         <DialogBody display="flex" flexDirection="column" gap="4">
           <Input placeholder="Enter your email" {...register('email')} />
           <Input placeholder="Enter your password" type="password" {...register('password')} />
+
+          <ErrorMessage error={loginError} />
         </DialogBody>
 
         <DialogFooter>
-          <Button>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
           <Button type="submit">Save</Button>
         </DialogFooter>
       </DialogContent>

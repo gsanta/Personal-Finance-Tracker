@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import Header from './Header/Header';
 import { ChakraProvider, createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
+import { GlobalPropsContext } from '@/hooks/useGlobalProps';
 
 type PageProps = {
   children: ReactNode;

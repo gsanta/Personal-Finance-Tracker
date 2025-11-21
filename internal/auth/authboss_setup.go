@@ -125,11 +125,10 @@ func Setup(r *gin.Engine, db *sql.DB) (*ab.Authboss, error) {
 	// Enable JSON body parsing so application/json works for /auth endpoints.
 	defaults.SetCore(&aboss.Config, true, false)
 
-	// instead of 307 redirect, return 200
-	redir, ok := aboss.Config.Core.Redirector.(*defaults.Redirector)
-	if ok {
-		redir.CorceRedirectTo200 = true // (note the typo in the field name in Authboss)
-	}
+	// Force API-style redirects for all Authboss endpoints using our APIRedirector
+	aboss.Config.Core.Redirector = APIRedirector{Renderer: aboss.Config.Core.ViewRenderer}
+	// Use APIResponder to coerce proper 4xx codes for failures while still rendering JSON
+	aboss.Config.Core.Responder = NewAPIResponder(aboss.Config.Core.ViewRenderer)
 
 	// Client state (sessions + cookies) using secure keys
 	// Session keys (gorilla/sessions): prefer dedicated hash/block if provided, fallback to SESSION_STORE_KEY.
