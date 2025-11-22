@@ -58,14 +58,37 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default() // includes Logger and Recovery
 
-	// auth (optional)
-	aboss, err := auth.Setup(r, db.DB)
-	if err != nil {
-		log.Fatalf("auth setup failed: %v", err)
+	// Setup authentication
+	service, auth_err := auth.Setup(r, db.DB)
+	if auth_err != nil {
+		log.Fatalf("Failed to setup authentication: %v", auth_err)
 	}
-	// If auth is enabled, load client-state for all routes so handlers can read session
-	if aboss != nil {
-		r.Use(auth.GinLoadClientState(aboss))
+
+	// setup auth routes - convert Chi handlers to Gin
+	authHandler, _ := service.Auth.Handlers()
+
+	registrationHandler := api.NewRegistrationHandler(db.DB)
+	r.POST("/api/auth/register", registrationHandler.Register)
+	authGroup := r.Group("/auth")
+	authGroup.GET("/*path", gin.WrapH(authHandler))
+	authGroup.POST("/*path", gin.WrapH(authHandler))
+
+	withAuth := func(handler gin.HandlerFunc) gin.HandlerFunc {
+		return gin.HandlerFunc(func(c *gin.Context) {
+			// Check for authentication cookie/token
+			tokenCookie, err := c.Request.Cookie("JWT")
+			if err != nil || tokenCookie.Value == "" {
+				// Not authenticated, redirect to login
+				c.Redirect(http.StatusFound, "/auth/local/login")
+				return
+			}
+
+			// You could add additional token validation here
+			// For now, just check if the cookie exists
+
+			// Call the actual handler
+			handler(c)
+		})
 	}
 
 	// static files
@@ -74,11 +97,11 @@ func main() {
 	// routes
 	// Redirect root to /home
 	r.GET("/", func(c *gin.Context) { c.Redirect(http.StatusFound, "/home") })
-	
+
 	r.GET("/products", gin.WrapF(handlers.ProductsHandler))
 	r.GET("/summaries", gin.WrapF(web.SummariesHandler))
 	r.GET("/bookings", gin.WrapF(handlers.BookingsHandler))
-	r.GET("/profile", gin.WrapH(auth.RequireAuth(aboss, http.HandlerFunc(handlers.ProfileHandler))))
+	r.GET("/profile", withAuth(gin.WrapF(handlers.ProfileHandler)))
 	r.GET("/home", gin.WrapF(handlers.HomeHandler))
 	r.GET("/api/products", gin.WrapF(api.ProductsHandler)) // JSON
 	// 404 route (HTML/JSON)

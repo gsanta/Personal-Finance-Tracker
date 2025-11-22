@@ -47,7 +47,7 @@ const LoginDialog = () => {
 
   const onSubmit = async ({ email, password }: LoginFormData) => {
     try {
-      await loginUser({ email, password });
+      await loginUser({ user: email, passwd: password });
       onClose();
     } catch {
       // stop propagation

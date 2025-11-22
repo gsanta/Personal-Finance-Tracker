@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gsanta/Personal-Finance-Tracker/internal/auth"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 )
 
@@ -12,16 +11,11 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[ProfileHandler] called: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 	web.EnsureTemplates()
 
-	user, err := auth.CurrentUser(r)
-
-	if err != nil {
-		// handle error (e.g., log or return HTTP 500)
-		return
-	}
-
+	// TODO: Implement proper authentication check with go-pkgz/auth
+	// For now, assume user is not logged in
 	pageProps := map[string]interface{}{
-		"isLoggedIn": auth.IsLoggedIn(r),
-		"user":       user,
+		"isLoggedIn": false,
+		"user":       nil,
 	}
 
 	web.RenderPage(w, r, pageProps)

@@ -56,9 +56,9 @@ export const monthlySummaryPath = (config?: Config): string => {
   return pathWithConfig('/api/summary/monthly', config);
 };
 
-export const registerPath = '/auth/register';
+export const registerPath = '/api/auth/register';
 
-export const loginPath = '/auth/login';
+export const loginPath = '/auth/local/login';
 
 export const logoutPath = '/auth/logout';
 

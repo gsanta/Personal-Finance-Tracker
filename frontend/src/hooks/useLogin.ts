@@ -4,8 +4,8 @@ import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 
 type RegisterRequest = {
-  email: string;
-  password: string;
+  user: string;
+  passwd: string;
 };
 
 const useLogin = () => {
