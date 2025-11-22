@@ -65,7 +65,7 @@ const LoginDialog = () => {
       <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogHeader>
           <DialogTitle>Login</DialogTitle>
-          <DialogCloseTrigger />
+          <DialogCloseTrigger onClick={onClose} />
         </DialogHeader>
 
         <DialogBody display="flex" flexDirection="column" gap="4">
