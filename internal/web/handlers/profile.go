@@ -2,21 +2,27 @@ package web
 
 import (
 	"log"
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 )
 
-func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("[ProfileHandler] called: %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
+// ProfileHandler handles the profile page (Gin style)
+func ProfileHandler(c *gin.Context) {
+	log.Printf("[ProfileHandler] called: %s %s from %s", c.Request.Method, c.Request.URL.Path, c.Request.RemoteAddr)
 	web.EnsureTemplates()
 
-	// TODO: Implement proper authentication check with go-pkgz/auth
-	// For now, assume user is not logged in
+	user, isLoggedIn := web.GetCurrentUser(c)
+
 	pageProps := map[string]interface{}{
-		"isLoggedIn": false,
-		"user":       nil,
+		"isLoggedIn": isLoggedIn,
+		"user": map[string]interface{}{
+			"id":      user.ID,
+			"name":    user.Name,
+			"email":   user.Email,
+			"picture": user.Picture,
+		},
 	}
 
-	web.RenderPage(w, r, pageProps)
+	web.RenderPage(c.Writer, c.Request, pageProps)
 }

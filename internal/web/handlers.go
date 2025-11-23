@@ -10,6 +10,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-pkgz/auth/token"
 )
 
 var (
@@ -134,4 +137,13 @@ func WriteJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+func GetCurrentUser(c *gin.Context) (token.User, bool) {
+	if user, exists := c.Get("user"); exists {
+		if tokenUser, ok := user.(token.User); ok {
+			return tokenUser, true
+		}
+	}
+	return token.User{}, false
 }

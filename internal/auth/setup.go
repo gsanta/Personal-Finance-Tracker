@@ -24,21 +24,23 @@ type Service struct {
 func Setup(r *gin.Engine, db *sql.DB) (*Service, error) {
 	// JWT secret from environment or default
 	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "your-super-secret-jwt-key-change-in-production"
-	}
 
-	// Create auth options
+	log.Printf("[auth] JWT Secret length: %d", len(jwtSecret))
+	log.Printf("[auth] Base URL: %s", os.Getenv("BASE_URL"))
+
+	// Create auth options with more debugging
 	options := auth.Opts{
 		SecretReader: token.SecretFunc(func(id string) (string, error) {
+			log.Printf("[auth] SecretReader called with id: %s", id)
 			return jwtSecret, nil
 		}),
-		TokenDuration:  time.Hour * 24 * 7, // 7 days
-		CookieDuration: time.Hour * 24 * 7, // 7 days
+		TokenDuration:  time.Hour * 24 * 7,
+		CookieDuration: time.Hour * 24 * 7,
 		Issuer:         "personal-finance-tracker",
 		URL:            os.Getenv("BASE_URL"),
 		AvatarStore:    avatar.NewNoOp(),
-		RedirectURL:    "/profile",
+		// Add debugging
+		DisableXSRF: true, // Temporarily disable XSRF for debugging
 	}
 
 	service := auth.NewService(options)

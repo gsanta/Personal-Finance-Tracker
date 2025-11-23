@@ -4,10 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-pkgz/auth/token"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/auth"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	pubsubinit "github.com/gsanta/Personal-Finance-Tracker/internal/pubsub"
@@ -73,23 +75,62 @@ func main() {
 	authGroup.GET("/*path", gin.WrapH(authHandler))
 	authGroup.POST("/*path", gin.WrapH(authHandler))
 
-	withAuth := func(handler gin.HandlerFunc) gin.HandlerFunc {
+	// withAuth := func(handler gin.HandlerFunc) gin.HandlerFunc {
+	// 	return gin.HandlerFunc(func(c *gin.Context) {
+	// 		// Check for authentication cookie/token
+	// 		tokenCookie, err := c.Request.Cookie("JWT")
+	// 		if err != nil || tokenCookie.Value == "" {
+	// 			// Not authenticated, redirect to login
+	// 			c.Redirect(http.StatusFound, "/home")
+	// 			return
+	// 		}
+
+	// 		// You could add additional token validation here
+	// 		// For now, just check if the cookie exists
+
+	// 		// Call the actual handler
+	// 		handler(c)
+	// 	})
+	// }
+
+	authMiddleware := service.Auth.Middleware()
+
+	withAuthRedirect := func(handler gin.HandlerFunc) gin.HandlerFunc {
 		return gin.HandlerFunc(func(c *gin.Context) {
-			// Check for authentication cookie/token
-			tokenCookie, err := c.Request.Cookie("JWT")
-			if err != nil || tokenCookie.Value == "" {
-				// Not authenticated, redirect to login
-				c.Redirect(http.StatusFound, "/auth/local/login")
+			// Create a response recorder to capture what auth middleware does
+			rec := httptest.NewRecorder()
+
+			// Flag to track if auth passed and store user info
+			authPassed := false
+			var authenticatedUser token.User // Use the proper token.User type
+
+			// Create test handler that will be called if auth succeeds
+			testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				authPassed = true
+
+				// Use go-pkgz/auth's built-in function to get user info
+				if user, err := token.GetUserInfo(r); err == nil {
+					authenticatedUser = user
+				}
+			})
+
+			// Test the auth middleware
+			authMiddleware.Auth(testHandler).ServeHTTP(rec, c.Request)
+
+			// If auth passed, set user in Gin context and call handler
+			if authPassed {
+				// Set the user in Gin's context for the handler to use
+				c.Set("user", authenticatedUser)
+				handler(c)
 				return
 			}
 
-			// You could add additional token validation here
-			// For now, just check if the cookie exists
-
-			// Call the actual handler
-			handler(c)
+			// If auth failed, redirect to home instead of showing "unauthorized"
+			c.Redirect(http.StatusFound, "/home")
 		})
 	}
+
+	log.Printf("Auth middleware type: %T", authMiddleware)
 
 	// static files
 	r.Static("/static", "./internal/web/static")
@@ -101,7 +142,37 @@ func main() {
 	r.GET("/products", gin.WrapF(handlers.ProductsHandler))
 	r.GET("/summaries", gin.WrapF(web.SummariesHandler))
 	r.GET("/bookings", gin.WrapF(handlers.BookingsHandler))
-	r.GET("/profile", withAuth(gin.WrapF(handlers.ProfileHandler)))
+
+	//r.GET("/profile", func(c *gin.Context) {
+	//	log.Printf("=== PROFILE ROUTE DEBUG ===")
+	//
+	//	// Check if JWT cookie exists
+	//	jwtCookie, err := c.Request.Cookie("JWT")
+	//	if err != nil {
+	//		log.Printf("No JWT cookie found: %v", err)
+	//	} else {
+	//		log.Printf("JWT cookie found, length: %d", len(jwtCookie.Value))
+	//		log.Printf("JWT cookie value (first 50 chars): %s", jwtCookie.Value[:min(50, len(jwtCookie.Value))])
+	//	}
+	//
+	//	// Create a wrapper to see if auth middleware passes or fails
+	//	authResult := "FAILED"
+	//	protectedHandler := authMiddleware.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	//		authResult = "PASSED"
+	//		log.Printf("=== AUTH MIDDLEWARE PASSED ===")
+	//		handlers.ProfileHandler(w, r)
+	//	}))
+	//
+	//	// Try the auth middleware
+	//	protectedHandler.ServeHTTP(c.Writer, c.Request)
+	//
+	//	log.Printf("Auth result: %s", authResult)
+	//})
+
+	// protectedProfileHandler := authMiddleware.Auth(http.HandlerFunc(handlers.ProfileHandler))
+	r.GET("/profile", withAuthRedirect(handlers.ProfileHandler))
+
+	//r.GET("/profile", gin.WrapF(handlers.ProfileHandler))
 	r.GET("/home", gin.WrapF(handlers.HomeHandler))
 	r.GET("/api/products", gin.WrapF(api.ProductsHandler)) // JSON
 	// 404 route (HTML/JSON)
