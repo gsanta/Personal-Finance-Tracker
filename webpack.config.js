@@ -23,7 +23,10 @@ function plugins({ isProduction }) {
       output: 'manifest.json',
       entrypointsUseAssets: true,
       publicPath: isProduction ? true : `http://localhost:${WDS_PORT}/version-dev/`,
-    })
+    }),
+    new webpack.DefinePlugin({
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
+    }),
   ];
 
   if (!isProduction) {

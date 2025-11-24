@@ -2,7 +2,9 @@ import User from '@/types/User';
 import { createContext, useContext } from 'react';
 
 type GlobalProps = {
+  isPageScrolled: boolean;
   isLoggedIn: boolean;
+  setIsPageScrolled: (scrolled: boolean) => void;
   user: User;
 };
 

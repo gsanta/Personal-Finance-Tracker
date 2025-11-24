@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '../index.css';
@@ -18,17 +18,34 @@ declare global {
 
 const queryClient = new QueryClient();
 
-export function renderPageComponent(Page: ReactComponent): void {
-  const { isLoggedIn, user } = window.pageProps as { isLoggedIn: boolean; user: User };
-  const camelizedProps = camelCaseKeys(window.pageProps);
-  const page = (
+function AppWrapper({
+  Page,
+  camelizedProps,
+  isLoggedIn,
+  user,
+}: {
+  Page: ReactComponent;
+  camelizedProps: Record<string, any>;
+  isLoggedIn: boolean;
+  user: User;
+}) {
+  const [isPageScrolled, setIsPageScrolled] = useState(false);
+
+  return (
     <QueryClientProvider client={queryClient}>
-      <GlobalPropsContext.Provider value={{ isLoggedIn, user }}>
+      <GlobalPropsContext.Provider value={{ isLoggedIn, user, isPageScrolled, setIsPageScrolled }}>
         <Page {...camelizedProps} />
         <ReactQueryDevtools initialIsOpen={false} />
       </GlobalPropsContext.Provider>
     </QueryClientProvider>
   );
+}
+
+export function renderPageComponent(Page: ReactComponent): void {
+  const { isLoggedIn, user } = window.pageProps as { isLoggedIn: boolean; user: User };
+  const camelizedProps = camelCaseKeys(window.pageProps);
+
+  const page = <AppWrapper Page={Page} camelizedProps={camelizedProps} isLoggedIn={isLoggedIn} user={user} />;
 
   const root = createRoot(document.getElementById('react-mount')!);
   root.render(page);

@@ -110,29 +110,6 @@ func SummariesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//func StatusHandler(w http.ResponseWriter, r *http.Request) {
-//	writeJSON(w, http.StatusOK, map[string]interface{}{"status": "ok", "time": time.Now()})
-//}
-//
-//func AsyncHandler(w http.ResponseWriter, r *http.Request) {
-//	var req struct {
-//		Task string `json:"task"`
-//	}
-//	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-//		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid payload"})
-//		return
-//	}
-//	// enqueue background work (simple fire-and-forget example)
-//	go processTask(req.Task)
-//	writeJSON(w, http.StatusAccepted, map[string]string{"status": "accepted"})
-//}
-
-func ProcessTask(task string) {
-	// replace with real queue/worker in production
-	time.Sleep(2 * time.Second)
-	// log/store result
-}
-
 func WriteJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -146,4 +123,29 @@ func GetCurrentUser(c *gin.Context) (token.User, bool) {
 		}
 	}
 	return token.User{}, false
+}
+
+// MergeAuthProps merges authentication fields into pageProps.
+// This adds isLoggedIn and user fields that are common across all authenticated pages.
+func MergeAuthProps(c *gin.Context, pageProps map[string]interface{}) map[string]interface{} {
+	if pageProps == nil {
+		pageProps = make(map[string]interface{})
+	}
+
+	user, isLoggedIn := GetCurrentUser(c)
+
+	pageProps["isLoggedIn"] = isLoggedIn
+
+	if isLoggedIn {
+		pageProps["user"] = map[string]interface{}{
+			"id":      user.ID,
+			"name":    user.Name,
+			"email":   user.Email,
+			"picture": user.Picture,
+		}
+	} else {
+		pageProps["user"] = nil
+	}
+
+	return pageProps
 }

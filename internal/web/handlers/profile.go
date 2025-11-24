@@ -12,17 +12,9 @@ func ProfileHandler(c *gin.Context) {
 	log.Printf("[ProfileHandler] called: %s %s from %s", c.Request.Method, c.Request.URL.Path, c.Request.RemoteAddr)
 	web.EnsureTemplates()
 
-	user, isLoggedIn := web.GetCurrentUser(c)
+	pageProps := map[string]interface{}{}
 
-	pageProps := map[string]interface{}{
-		"isLoggedIn": isLoggedIn,
-		"user": map[string]interface{}{
-			"id":      user.ID,
-			"name":    user.Name,
-			"email":   user.Email,
-			"picture": user.Picture,
-		},
-	}
+	pageProps = web.MergeAuthProps(c, pageProps)
 
 	web.RenderPage(c.Writer, c.Request, pageProps)
 }
