@@ -38,14 +38,20 @@ const Header = () => {
         transition="all 0.3s ease"
       >
         <Flex maxW="7xl" mx="auto" h="full" align="center" justify="space-between" px="6">
-          <Box color={textColor} fontSize="xl" fontWeight="bold">
-            Cicatanya
-          </Box>
-          <Box display="flex" alignItems="center" gap="6">
-            <Button colorPalette="orange" onClick={() => logout()} variant="ghost">
-              <Text color={textColor} textStyle="3xl" textTransform="uppercase">
-                {t('booking')}
+          <Button asChild colorPalette="orange" variant="ghost">
+            <a href="/">
+              <Text color={textColor} fontSize="xl" fontWeight="bold">
+                Cicatanya
               </Text>
+            </a>
+          </Button>
+          <Box display="flex" alignItems="center" gap="6">
+            <Button asChild colorPalette="orange" variant="ghost">
+              <a href="bookings">
+                <Text color={textColor} textStyle="3xl" textTransform="uppercase">
+                  {t('booking')}
+                </Text>
+              </a>
             </Button>
             <Box display="flex" gap="4">
               {isLoggedIn ? (
