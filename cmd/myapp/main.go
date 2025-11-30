@@ -89,6 +89,7 @@ func main() {
 	r.GET("/products", routeAuthInfo.Public(handlers.ProductsHandlerGin))
 	r.GET("/summaries", routeAuthInfo.Public(gin.WrapF(web.SummariesHandler)))
 	r.GET("/bookings", routeAuthInfo.Public(gin.WrapF(handlers.BookingsHandler)))
+	r.GET("/rooms", routeAuthInfo.Public(gin.WrapF(handlers.RoomsHandler)))
 
 	r.GET("/profile", routeAuthInfo.Protected(handlers.ProfileHandler))
 

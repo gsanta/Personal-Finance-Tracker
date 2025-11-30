@@ -1,3 +1,9 @@
+-- Test users data
+INSERT INTO users (id, email, password) VALUES
+  ('eacc781f-6480-462a-adf7-a6e276aee761', 'john.doe@example.com', '$2a$12$K8F1VNEf1EGNGvYzNXmYbulwfhz1HzQF0R0I6n7qkZYXvJ3r6D8Gi'),
+  ('149e1f14-9db9-4eaa-b076-ad0a70907215', 'jane.smith@example.com', '$2a$12$L9G2WOFg2FHOHwZaOYnZcvmxgiA2I0aG1S1J7o8rlAZYwK4s7E9Hj')
+ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO products (id, name, price, quantity) VALUES
   ('75014105-27ee-4eaf-8060-3315af8b64c2', 'Cat Food Salmon', 12.99, 20),
   ('06685d32-8477-43c4-9dc4-aed302b06101', 'Cat Food Chicken', 11.49, 15),
@@ -45,4 +51,27 @@ INSERT INTO media_assets (id, object_key, original_filename, content_type, size_
   ('15151515-1515-4151-8151-151515151515', 'uploads/1762603592/4e5d4406-b8dd-467f-8c01-0271c11aa0ab.jpg', 'cat-tree-deluxe.jpg', 'image/jpeg', 2048, NOW(), 'uploaded', '4e5d4406-b8dd-467f-8c01-0271c11aa0ab'),
   ('16161616-1616-4161-8161-161616161616', 'uploads/1762603652/995ce263-2770-407d-856e-36286083d939.jpg', 'cat-harness.jpg', 'image/jpeg', 2048, NOW(), 'uploaded', '995ce263-2770-407d-856e-36286083d939'),
   ('17171717-1717-4171-8171-171717171717', 'uploads/1762603712/657f1750-fc2c-48e2-81b7-d539e8a6ec61.jpg', 'cat-door.jpg', 'image/jpeg', 2048, NOW(), 'uploaded', '657f1750-fc2c-48e2-81b7-d539e8a6ec61') ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO rooms (id, name, address) VALUES
+  ('a1b2c3d4-e5f6-4789-9abc-def012345678', 'Cozy Cat Suite', '123 Whisker Lane, Cat City, CC 12345'),
+  ('b2c3d4e5-f6a7-4890-9bcd-ef0123456789', 'Luxury Feline Resort', '456 Purr Avenue, Meowtown, MT 67890') ON CONFLICT (id) DO NOTHING;
+
+-- Add bookings data to the existing seed file
+INSERT INTO bookings (id, user_id, room_id, start_date, end_date) VALUES
+  -- Bookings for Cozy Cat Suite (room: a1b2c3d4-e5f6-4789-9abc-def012345678)
+  ('ed099142-54a9-4648-a94e-7820fee2bafb', 'eacc781f-6480-462a-adf7-a6e276aee761', 'a1b2c3d4-e5f6-4789-9abc-def012345678', NOW() - INTERVAL '45 days', NOW() - INTERVAL '40 days'),
+  ('6705c2d2-9d61-4880-acbf-b20c3e8c7bf4', '149e1f14-9db9-4eaa-b076-ad0a70907215', 'a1b2c3d4-e5f6-4789-9abc-def012345678', NOW() - INTERVAL '5 days', NOW() + INTERVAL '2 days'),
+  ('def5dfaf-3a2a-4877-8008-838c56d7a0d8', 'eacc781f-6480-462a-adf7-a6e276aee761', 'a1b2c3d4-e5f6-4789-9abc-def012345678', NOW() + INTERVAL '5 days', NOW() + INTERVAL '8 days'),
+  ('dda008cb-e1f5-4b61-864e-bad0e7753e1a', '149e1f14-9db9-4eaa-b076-ad0a70907215', 'a1b2c3d4-e5f6-4789-9abc-def012345678', NOW() + INTERVAL '15 days', NOW() + INTERVAL '20 days'),
+  ('a8d3b714-cee4-4b09-bfc1-5ca6a80668d3', 'eacc781f-6480-462a-adf7-a6e276aee761', 'a1b2c3d4-e5f6-4789-9abc-def012345678', NOW() + INTERVAL '22 days', NOW() + INTERVAL '28 days'),
+  
+  -- Bookings for Luxury Feline Resort (room: b2c3d4e5-f6a7-4890-9bcd-ef0123456789)
+  ('6df2a429-2284-4b4a-8239-bbfc5a1d62b0', '149e1f14-9db9-4eaa-b076-ad0a70907215', 'b2c3d4e5-f6a7-4890-9bcd-ef0123456789', NOW() - INTERVAL '71 days', NOW() - INTERVAL '66 days'),
+  ('cf93ab35-be35-4dd0-bdca-867f97a56216', 'eacc781f-6480-462a-adf7-a6e276aee761', 'b2c3d4e5-f6a7-4890-9bcd-ef0123456789', NOW() - INTERVAL '2 days', NOW() + INTERVAL '3 days'),
+  ('6ecc808a-2e31-4762-9c6c-aecc25091d88', '149e1f14-9db9-4eaa-b076-ad0a70907215', 'b2c3d4e5-f6a7-4890-9bcd-ef0123456789', NOW() + INTERVAL '20 days', NOW() + INTERVAL '28 days')
+ON CONFLICT (id) DO NOTHING;
+
+
+
+
 

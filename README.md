@@ -56,6 +56,12 @@ Run migration
 migrate -path db/migrations -database "postgres://test-user:test-pw@localhost:6501/cat_db?sslmode=disable" up
 ```
 
+Run down migration (revert)
+
+```sh
+migrate -path db/migrations -database "postgres://test-user:test-pw@localhost:6501/cat_db?sslmode=disable" down 1
+```
+
 Run seed file
 
 ```sh
