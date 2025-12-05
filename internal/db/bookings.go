@@ -12,6 +12,13 @@ type Booking struct {
 	RoomId    string
 }
 
+type NewBooking struct {
+	EndDate   string
+	StartDate string
+	RoomId    string
+	UserId    string
+}
+
 func ListBookings(db *sql.DB, fromDate *time.Time) ([]Booking, error) {
 	var filterDate time.Time
 
@@ -40,4 +47,12 @@ func ListBookings(db *sql.DB, fromDate *time.Time) ([]Booking, error) {
 		out = append(out, booking)
 	}
 	return out, rows.Err()
+}
+
+func InsertBooking(db *sql.DB, booking *NewBooking) error {
+	query := `INSERT INTO bookings (user_id, room_id, start_date, end_date) 
+			  VALUES ($1, $2, $3, $4)`
+
+	_, err := db.Exec(query, booking.UserId, booking.RoomId, booking.StartDate, booking.EndDate)
+	return err
 }

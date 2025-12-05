@@ -3,8 +3,8 @@ import { createContext, useContext } from 'react';
 
 type GlobalProps = {
   isPageScrolled: boolean;
-  isLoggedIn: boolean;
   setIsPageScrolled: (scrolled: boolean) => void;
+  setUser: (user: User) => void;
   user: User;
 };
 

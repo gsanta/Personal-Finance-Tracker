@@ -55,6 +55,14 @@ function cssLoader() {
   return loaders;
 }
 
+function scssLoader() {
+  const loaders = [];
+  loaders.push(MiniCssExtractPlugin.loader);
+  loaders.push('css-loader');
+  loaders.push('sass-loader');
+  return loaders;
+}
+
 function tsLoader({ isProduction }) {
   const loader = {
     loader: 'babel-loader',
@@ -117,6 +125,10 @@ module.exports = (_env, argv) => {
         {
           test: /\.css$/,
           use: cssLoader(opts),
+        },
+        {
+          test: /\.s[ac]ss$/,
+          use: scssLoader(opts),
         },
         {
           test: [/\.gif$/, /\.jpe?g$/, /\.png$/, /\.ico$/, /\.eot$/, /\.ttf$/, /\.woff$/, /\.woff2$/, /\.svg$/],

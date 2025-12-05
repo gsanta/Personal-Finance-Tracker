@@ -1,7 +1,8 @@
 -- Test users data
+-- Password: Testpassword1
 INSERT INTO users (id, email, password) VALUES
-  ('eacc781f-6480-462a-adf7-a6e276aee761', 'john.doe@example.com', '$2a$12$K8F1VNEf1EGNGvYzNXmYbulwfhz1HzQF0R0I6n7qkZYXvJ3r6D8Gi'),
-  ('149e1f14-9db9-4eaa-b076-ad0a70907215', 'jane.smith@example.com', '$2a$12$L9G2WOFg2FHOHwZaOYnZcvmxgiA2I0aG1S1J7o8rlAZYwK4s7E9Hj')
+  ('eacc781f-6480-462a-adf7-a6e276aee761', 'john.doe@example.com', '$2a$10$W9xzsn.Km5Nnk84w7R/CZuD56EqwOF7mmtmoYKdzw8JvoIyt999Li'),
+  ('149e1f14-9db9-4eaa-b076-ad0a70907215', 'jane.smith@example.com', '$2a$10$W9xzsn.Km5Nnk84w7R/CZuD56EqwOF7mmtmoYKdzw8JvoIyt999Li')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO products (id, name, price, quantity) VALUES

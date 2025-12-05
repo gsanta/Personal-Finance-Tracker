@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 const Header = () => {
   const { t } = useTranslation();
-  const { isLoggedIn, isPageScrolled, setIsPageScrolled } = useGlobalProps();
+  const { isPageScrolled, setIsPageScrolled, user } = useGlobalProps();
 
   const { logout } = useLogout();
 
@@ -47,14 +47,14 @@ const Header = () => {
           </Button>
           <Box display="flex" alignItems="center" gap="6">
             <Button asChild colorPalette="orange" variant="ghost">
-              <a href="bookings">
+              <a href="rooms">
                 <Text color={textColor} textStyle="3xl" textTransform="uppercase">
                   {t('booking')}
                 </Text>
               </a>
             </Button>
             <Box display="flex" gap="4">
-              {isLoggedIn ? (
+              {user ? (
                 <Button colorPalette="yellow" onClick={() => logout()} variant="solid">
                   Logout
                 </Button>

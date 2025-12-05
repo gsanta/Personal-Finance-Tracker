@@ -1,0 +1,16 @@
+// .rdrNoSelection {
+//   .rdrSelected, .rdrInRange, .rdrStartEdge, .rdrEndEdge {
+//     background: #fff;
+//   }
+
+//   .rdrDay:not(.rdrDayPassive) .rdrInRange ~ .rdrDayNumber span,
+//   .rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
+//   .rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span,
+//   .rdrDay:not(.rdrDayPassive) .rdrSelected ~ .rdrDayNumber span {
+//     color: 'black';
+
+//     &:after {
+//       background: 'black';
+//     }
+//   }
+// }

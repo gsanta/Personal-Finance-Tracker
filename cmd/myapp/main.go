@@ -88,17 +88,18 @@ func main() {
 
 	r.GET("/products", routeAuthInfo.Public(handlers.ProductsHandlerGin))
 	r.GET("/summaries", routeAuthInfo.Public(gin.WrapF(web.SummariesHandler)))
-	r.GET("/bookings", routeAuthInfo.Public(gin.WrapF(handlers.BookingsHandler)))
-	r.GET("/rooms", routeAuthInfo.Public(gin.WrapF(handlers.RoomsHandler)))
+	r.GET("/bookings", routeAuthInfo.Public(handlers.BookingsHandler))
+	r.GET("/rooms", routeAuthInfo.Public(handlers.RoomsHandler))
 
 	r.GET("/profile", routeAuthInfo.Protected(handlers.ProfileHandler))
 
-	r.GET("/home", routeAuthInfo.Public(handlers.HomeHandlerGin))
+	r.GET("/home", routeAuthInfo.Public(handlers.HomeHandler))
 	r.GET("/api/products", gin.WrapF(api.ProductsHandler)) // JSON
 	// 404 route (HTML/JSON)
 	r.GET("/not_found", gin.WrapF(handlers.NotFoundHandler))
 
 	mediaHandler := api.NewMediaHandler(db.DB, bucketName, gcsService)
+	bookingsHandler := api.NewBookingsHandler(db.DB)
 
 	// param route
 	r.GET("/api/media/:id", func(c *gin.Context) {
@@ -107,6 +108,7 @@ func main() {
 
 	r.POST("/api/media/upload-url", gin.WrapF(mediaHandler.GenerateUploadURL))
 	r.POST("/api/media/upload-finalize", gin.WrapF(mediaHandler.FinalizeUploadMediaAsset))
+	r.POST("/api/bookings", routeAuthInfo.Protected(bookingsHandler.CreateBooking))
 
 	port := os.Getenv("PORT")
 	if port == "" {

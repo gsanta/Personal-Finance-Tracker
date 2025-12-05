@@ -4,7 +4,7 @@ module.exports = function(source) {
 
   recast.visit(ast, {
     visitExportDefaultDeclaration(path) {
-      path.replace(`import { renderPageComponent } from '@/utils/reactPage';\nrenderPageComponent(${recast.print(path.node.declaration).code});`);
+      path.replace(`import { renderPageComponent } from '@/utils/renderPageComponent';\nrenderPageComponent(${recast.print(path.node.declaration).code});`);
       return false;
     }
   });

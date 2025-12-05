@@ -3,10 +3,16 @@ import { api, loginPath } from '@/utils/apiRoutes';
 import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useForm } from 'react-hook-form';
+import useGlobalProps from './useGlobalProps';
 
 type RegisterRequest = {
   user: string;
   passwd: string;
+};
+
+type RegisterResponse = {
+  name: string;
+  id: string;
 };
 
 export type LoginFormData = {
@@ -19,12 +25,17 @@ type UseLoginProps = {
 };
 
 const useLogin = ({ onClose }: UseLoginProps) => {
+  const { setUser } = useGlobalProps();
+
   const {
     error: loginError,
     mutateAsync: loginUser,
     reset,
-  } = useMutation<unknown, AxiosError<GeneralError>, RegisterRequest>({
+  } = useMutation<RegisterResponse, AxiosError<GeneralError>, RegisterRequest>({
     mutationFn: async (data) => api.post(loginPath, data),
+    onSuccess: (response) => {
+      setUser({ email: response.name, id: response.id });
+    },
   });
 
   const {

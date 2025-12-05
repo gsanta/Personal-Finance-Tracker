@@ -1,15 +1,16 @@
 package web
 
 import (
-	"net/http"
-
+	"github.com/gin-gonic/gin"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 )
 
-func BookingsHandler(w http.ResponseWriter, r *http.Request) {
+func BookingsHandler(c *gin.Context) {
 	web.EnsureTemplates()
-	
+
 	pageProps := map[string]interface{}{}
 
-	web.RenderPage(w, r, pageProps)
+	pageProps = web.MergeAuthProps(c, pageProps)
+
+	web.RenderPage(c.Writer, c.Request, pageProps)
 }

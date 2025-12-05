@@ -21,19 +21,18 @@ const queryClient = new QueryClient();
 function AppWrapper({
   Page,
   camelizedProps,
-  isLoggedIn,
-  user,
+  user: initialUser,
 }: {
   Page: ReactComponent;
-  camelizedProps: Record<string, any>;
-  isLoggedIn: boolean;
+  camelizedProps: Record<string, unknown>;
   user: User;
 }) {
   const [isPageScrolled, setIsPageScrolled] = useState(false);
+  const [user, setUser] = useState(initialUser);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GlobalPropsContext.Provider value={{ isLoggedIn, user, isPageScrolled, setIsPageScrolled }}>
+      <GlobalPropsContext.Provider value={{ isPageScrolled, setIsPageScrolled, setUser, user }}>
         <Page {...camelizedProps} />
         <ReactQueryDevtools initialIsOpen={false} />
       </GlobalPropsContext.Provider>
@@ -42,10 +41,10 @@ function AppWrapper({
 }
 
 export function renderPageComponent(Page: ReactComponent): void {
-  const { isLoggedIn, user } = window.pageProps as { isLoggedIn: boolean; user: User };
+  const { user } = window.pageProps as { user: User };
   const camelizedProps = camelCaseKeys(window.pageProps);
 
-  const page = <AppWrapper Page={Page} camelizedProps={camelizedProps} isLoggedIn={isLoggedIn} user={user} />;
+  const page = <AppWrapper Page={Page} camelizedProps={camelizedProps} user={user} />;
 
   const root = createRoot(document.getElementById('react-mount')!);
   root.render(page);

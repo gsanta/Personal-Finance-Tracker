@@ -3,24 +3,25 @@ package web
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 )
 
-func RoomsHandler(w http.ResponseWriter, r *http.Request) {
+func RoomsHandler(c *gin.Context) {
 	web.EnsureTemplates()
 
 	rooms, err := db.ListRooms(db.DB)
 
 	if err != nil {
-		web.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load rooms"})
+		web.WriteJSON(c.Writer, http.StatusInternalServerError, map[string]string{"error": "failed to load rooms"})
 		return
 	}
 
 	bookings, err := db.ListBookings(db.DB, nil)
 
 	if err != nil {
-		web.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load bookings"})
+		web.WriteJSON(c.Writer, http.StatusInternalServerError, map[string]string{"error": "failed to load bookings"})
 		return
 	}
 
@@ -29,5 +30,7 @@ func RoomsHandler(w http.ResponseWriter, r *http.Request) {
 		"rooms":    rooms,
 	}
 
-	web.RenderPage(w, r, pageProps)
+	pageProps = web.MergeAuthProps(c, pageProps)
+
+	web.RenderPage(c.Writer, c.Request, pageProps)
 }

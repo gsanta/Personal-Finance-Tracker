@@ -74,7 +74,7 @@ const LoginDialog = () => {
           {currentForm === 'login' ? (
             <LoginForm register={registerLogin} setCurrentForm={setCurrentForm} />
           ) : (
-            <RegistrationForm register={registerRegister} />
+            <RegistrationForm register={registerRegister} setCurrentForm={setCurrentForm} />
           )}
 
           <ErrorMessage error={loginError || registerError} />
@@ -85,7 +85,7 @@ const LoginDialog = () => {
             {t('cancel')}
           </Button>
           <Button colorPalette="yellow" type="submit" variant="solid">
-            {t('login')}
+            {currentForm === 'login' ? t('login') : t('register')}
           </Button>
         </DialogFooter>
       </DialogContent>

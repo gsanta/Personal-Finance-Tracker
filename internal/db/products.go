@@ -112,7 +112,7 @@ func GetAllProductsWithAssets(db *sql.DB, page, itemsPerPage int) ([]Product, in
 	}
 
 	// Joined rows; asset columns will be NULL when no assets exist for a product.
-	// NOTE: We order by product name like the simple query to keep ordering consistent.
+	// NOTE: We order by produc	t name like the simple query to keep ordering consistent.
 	const q = `
 SELECT p.id,
        p.name,

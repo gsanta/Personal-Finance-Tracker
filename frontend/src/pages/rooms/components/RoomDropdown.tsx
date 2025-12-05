@@ -1,17 +1,22 @@
 import Room from '@/types/Room';
 import { createListCollection, Select } from '@chakra-ui/react';
+import { useMemo } from 'react';
 
 type RoomDropdownProps = {
+  onChange: (roomId: string) => void;
   rooms: Room[];
+  value: string;
 };
 
-const RoomDropdown = ({ rooms }: RoomDropdownProps) => {
+const RoomDropdown = ({ rooms, value, onChange }: RoomDropdownProps) => {
   const roomCollection = createListCollection({
     items: rooms.map((room) => ({ label: room.name, value: room.id })),
   });
 
+  const values = useMemo(() => [value], [value]);
+
   return (
-    <Select.Root collection={roomCollection}>
+    <Select.Root collection={roomCollection} value={values} onValueChange={(e) => onChange(e.value[0])} width="320px">
       <Select.HiddenSelect />
       <Select.Label />
 

@@ -1,15 +1,41 @@
-import Calendar from '@/components/Calendar/Calendar';
+import Calendar, { DateRange } from '@/components/Calendar/Calendar';
 import Page from '@/components/Page';
-import { Box, createListCollection, Select } from '@chakra-ui/react';
+import { Box, Button } from '@chakra-ui/react';
 import backgroundImage from '@/assets/images/cat_booking_holidary.png';
 import Room from '@/types/Room';
 import RoomDropdown from './components/RoomDropdown';
+import Booking from '@/types/Booking';
+import { useState, useMemo } from 'react';
+import useBookRoom from '@/hooks/useBookRoom';
 
 type RoomsPageProps = {
+  bookings: Booking[];
   rooms: Room[];
 };
 
-const RoomsPage = ({ rooms }: RoomsPageProps) => {
+const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+
+  const [range, setRange] = useState<DateRange>();
+
+  const bookingsForSelectedRoom = useMemo(
+    () => bookings.filter((booking) => booking.roomId === selectedRoomId),
+    [bookings, selectedRoomId],
+  );
+
+  const { createBooking } = useBookRoom();
+
+  const ranges = useMemo(
+    () =>
+      bookingsForSelectedRoom.map((booking, index) => ({
+        startDate: new Date(booking.startDate),
+        endDate: new Date(booking.endDate),
+        color: '#3182ce',
+        key: `booking-${booking.id || index}`,
+      })),
+    [bookingsForSelectedRoom],
+  );
+
   return (
     <Page>
       <Box
@@ -47,9 +73,20 @@ const RoomsPage = ({ rooms }: RoomsPageProps) => {
           zIndex: 1,
         }}
       >
-        <Box marginTop="2rem" position="relative" zIndex={2}>
-          <RoomDropdown rooms={rooms} />
-          <Calendar />
+        <Box marginTop="2rem" display="flex" flexDirection="column" gap="4">
+          <RoomDropdown rooms={rooms} value={selectedRoomId} onChange={setSelectedRoomId} />
+          <Calendar onRangeChange={(range) => setRange(range)} ranges={ranges} />
+          <Button
+            onClick={() =>
+              createBooking({
+                endDate: range?.endDate?.toISOString() || '',
+                roomId: selectedRoomId,
+                startDate: range?.startDate?.toISOString() || '',
+              })
+            }
+          >
+            Foglalás
+          </Button>
         </Box>
       </Box>
     </Page>

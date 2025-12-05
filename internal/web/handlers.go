@@ -134,8 +134,6 @@ func MergeAuthProps(c *gin.Context, pageProps map[string]interface{}) map[string
 
 	user, isLoggedIn := GetCurrentUser(c)
 
-	pageProps["isLoggedIn"] = isLoggedIn
-
 	if isLoggedIn {
 		pageProps["user"] = map[string]interface{}{
 			"id":      user.ID,
