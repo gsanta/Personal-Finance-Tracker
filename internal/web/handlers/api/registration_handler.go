@@ -52,7 +52,7 @@ func (h *RegistrationHandler) Register(c *gin.Context) {
 		return
 	}
 
-	asset := &dbpkg.User{
+	asset := &dbpkg.UserWithPassword{
 		Email:    req.Email,
 		Password: string(hash),
 	}

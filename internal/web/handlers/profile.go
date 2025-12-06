@@ -14,7 +14,7 @@ func ProfileHandler(c *gin.Context) {
 
 	pageProps := map[string]interface{}{}
 
-	pageProps = web.MergeAuthProps(c, pageProps)
+	web.PutCurrentUserOnPagePropsAndReturnUser(c, pageProps)
 
 	web.RenderPage(c.Writer, c.Request, pageProps)
 }

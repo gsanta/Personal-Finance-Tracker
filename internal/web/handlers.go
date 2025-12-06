@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-pkgz/auth/token"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 )
 
 var (
@@ -116,18 +116,16 @@ func WriteJSON(w http.ResponseWriter, status int, v interface{}) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-func GetCurrentUser(c *gin.Context) (token.User, bool) {
+func GetCurrentUser(c *gin.Context) (db.User, bool) {
 	if user, exists := c.Get("user"); exists {
-		if tokenUser, ok := user.(token.User); ok {
+		if tokenUser, ok := user.(db.User); ok {
 			return tokenUser, true
 		}
 	}
-	return token.User{}, false
+	return db.User{}, false
 }
 
-// MergeAuthProps merges authentication fields into pageProps.
-// This adds isLoggedIn and user fields that are common across all authenticated pages.
-func MergeAuthProps(c *gin.Context, pageProps map[string]interface{}) map[string]interface{} {
+func PutCurrentUserOnPagePropsAndReturnUser(c *gin.Context, pageProps map[string]interface{}) db.User {
 	if pageProps == nil {
 		pageProps = make(map[string]interface{})
 	}
@@ -136,14 +134,12 @@ func MergeAuthProps(c *gin.Context, pageProps map[string]interface{}) map[string
 
 	if isLoggedIn {
 		pageProps["user"] = map[string]interface{}{
-			"id":      user.ID,
-			"name":    user.Name,
-			"email":   user.Email,
-			"picture": user.Picture,
+			"id":    user.ID,
+			"email": user.Email,
 		}
 	} else {
 		pageProps["user"] = nil
 	}
 
-	return pageProps
+	return user
 }

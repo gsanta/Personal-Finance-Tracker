@@ -45,7 +45,7 @@ func ProductsHandlerGin(c *gin.Context) {
 	}
 
 	// Merge in common authentication fields
-	pageProps = web.MergeAuthProps(c, pageProps)
+	web.PutCurrentUserOnPagePropsAndReturnUser(c, pageProps)
 
 	web.RenderPage(c.Writer, c.Request, pageProps)
 }

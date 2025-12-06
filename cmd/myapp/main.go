@@ -75,7 +75,7 @@ func main() {
 
 	authMiddleware := service.Auth.Middleware()
 
-	routeAuthInfo := web.RouteAuthInfo{AuthMiddleWare: &authMiddleware}
+	routeAuthInfo := web.RouteAuthInfo{AuthMiddleWare: &authMiddleware, DB: db.DB}
 
 	log.Printf("Auth middleware type: %T", authMiddleware)
 

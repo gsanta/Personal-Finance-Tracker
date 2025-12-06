@@ -16,8 +16,7 @@ func HomeHandler(c *gin.Context) {
 		// Add any home-specific fields here
 	}
 
-	// Merge in common authentication fields
-	pageProps = web.MergeAuthProps(c, pageProps)
+	web.PutCurrentUserOnPagePropsAndReturnUser(c, pageProps)
 
 	web.RenderPage(c.Writer, c.Request, pageProps)
 }

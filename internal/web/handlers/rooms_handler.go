@@ -18,6 +18,10 @@ func RoomsHandler(c *gin.Context) {
 		return
 	}
 
+	pageProps := map[string]interface{}{}
+
+	user := web.PutCurrentUserOnPagePropsAndReturnUser(c, pageProps)
+
 	bookings, err := db.ListBookings(db.DB, nil)
 
 	if err != nil {
@@ -25,12 +29,14 @@ func RoomsHandler(c *gin.Context) {
 		return
 	}
 
-	pageProps := map[string]interface{}{
-		"bookings": bookings,
-		"rooms":    rooms,
+	for i := range bookings {
+		if bookings[i].UserId != user.ID {
+			bookings[i].UserId = ""
+		}
 	}
 
-	pageProps = web.MergeAuthProps(c, pageProps)
+	pageProps["bookings"] = bookings
+	pageProps["rooms"] = rooms
 
 	web.RenderPage(c.Writer, c.Request, pageProps)
 }

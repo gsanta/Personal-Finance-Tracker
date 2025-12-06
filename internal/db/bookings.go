@@ -10,6 +10,7 @@ type Booking struct {
 	ID        string
 	StartDate string
 	RoomId    string
+	UserId    string
 }
 
 type NewBooking struct {
@@ -28,7 +29,7 @@ func ListBookings(db *sql.DB, fromDate *time.Time) ([]Booking, error) {
 		filterDate = time.Now().AddDate(0, -1, 0)
 	}
 
-	query := `SELECT id, end_date, start_date, room_id FROM bookings 
+	query := `SELECT id, end_date, start_date, room_id, user_id FROM bookings 
 			  WHERE start_date > $1 
 			  ORDER BY start_date ASC`
 
@@ -41,7 +42,7 @@ func ListBookings(db *sql.DB, fromDate *time.Time) ([]Booking, error) {
 	var out []Booking
 	for rows.Next() {
 		var booking Booking
-		if err := rows.Scan(&booking.ID, &booking.EndDate, &booking.StartDate, &booking.RoomId); err != nil {
+		if err := rows.Scan(&booking.ID, &booking.EndDate, &booking.StartDate, &booking.RoomId, &booking.UserId); err != nil {
 			return nil, err
 		}
 		out = append(out, booking)
