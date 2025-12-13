@@ -1,19 +1,13 @@
 import { ReactNode } from 'react';
 import Header from './Header/Header';
-import { Box, ChakraProvider, createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
+import { Box, ChakraProvider, createSystem, defaultConfig } from '@chakra-ui/react';
 import '../utils/i18n';
+import config from '@/lib/theme/config';
 
 type PageProps = {
   children: ReactNode;
 };
 
-const config = defineConfig({
-  theme: {
-    tokens: {
-      colors: {},
-    },
-  },
-});
 
 const system = createSystem(defaultConfig, config);
 

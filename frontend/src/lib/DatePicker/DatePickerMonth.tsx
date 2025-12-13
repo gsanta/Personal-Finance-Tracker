@@ -1,0 +1,68 @@
+import { createElement, Fragment, useCallback, useId } from 'react';
+import { DateTime, Info } from 'luxon';
+import DatePickerGrid from './DatePickerGrid';
+import DatePickerDay, { DatePickerDayContext } from './DatePickerDay';
+import DatePickerHeader, {
+  DatePickerHeaderContent,
+  DatePickerHeaderNext,
+  DatePickerHeaderPrevious,
+} from './DatePickerHeader';
+import { Box, Text } from '@chakra-ui/react';
+import { useObjectMemo } from './DatePicker';
+import MonthSelect from './MonthSelect';
+import YearSelect from './YearSelect';
+
+const daysOfTheWeek = Info.weekdays('short');
+const daysCount = 6 * 7;
+
+interface Props {
+  controls: 'left' | 'right' | 'both';
+  onViewDateChange: (viewDate: DateTime) => void;
+  viewDate: DateTime;
+}
+
+const days = createElement(
+  Fragment,
+  {},
+  ...Array.from({ length: daysCount }).map((_, i) => <DatePickerDay key={i + 1} n={i + 1} />),
+);
+
+export const datePickerMinYear = 1990;
+export const datePickerMaxYear = 2100;
+
+const DatePickerMonth = ({ controls, onViewDateChange, viewDate }: Props) => {
+  const onNextMonth = useCallback(() => onViewDateChange(viewDate.plus({ months: 1 })), [onViewDateChange, viewDate]);
+  const onPreviousMonth = useCallback(
+    () => onViewDateChange(viewDate.minus({ months: 1 })),
+    [onViewDateChange, viewDate],
+  );
+
+  const dayContext = useObjectMemo({ onNextMonth, onPreviousMonth, viewDate });
+
+  const monthLabelId = useId();
+  return (
+    <Box data-testid={`controls-${controls}`}>
+      <DatePickerHeader controls={controls} onNext={onNextMonth} onPrevious={onPreviousMonth}>
+        <DatePickerHeaderPrevious label="previous month" />
+        <DatePickerHeaderContent id={monthLabelId}>
+          <MonthSelect side={controls === 'both' ? 'left' : controls} />
+          <YearSelect side={controls === 'both' ? 'left' : controls} />
+        </DatePickerHeaderContent>
+        <DatePickerHeaderNext label="next month" />
+      </DatePickerHeader>
+
+      <DatePickerGrid alignItems="center" gridTemplateRows="2rem" justifyItems="center">
+        {daysOfTheWeek.map((day) => (
+          <Text key={day} color="neutral.50" textTransform="capitalize">
+            {day}
+          </Text>
+        ))}
+      </DatePickerGrid>
+      <DatePickerGrid aria-labelledby={monthLabelId} paddingTop="8" role="listbox">
+        <DatePickerDayContext value={dayContext}>{days}</DatePickerDayContext>
+      </DatePickerGrid>
+    </Box>
+  );
+};
+
+export default DatePickerMonth;

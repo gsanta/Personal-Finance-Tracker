@@ -22,10 +22,6 @@ const BookingsPage = () => {
           transform: 'translateX(-50%)',
           width: '100%',
           height: '33.33%',
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
           filter: 'blur(3px)',
           zIndex: 0,
         }}

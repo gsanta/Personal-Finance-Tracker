@@ -1,0 +1,78 @@
+export const colorTokens = {
+  brand: {
+    50: { value: '#fff7ed' },
+    100: { value: '#ffedd5' },
+    200: { value: '#fed7aa' },
+    300: { value: '#fdba74' },
+    400: { value: '#fb923c' },
+    500: { value: '#f97316' },
+    600: { value: '#ea580c' },
+    700: { value: '#c2410c' },
+  },
+  disabled: {
+    50: { value: '#fafafa' },
+    100: { value: '#f4f4f5' },
+    200: { value: '#e4e4e7' },
+    300: { value: '#d4d4d8' },
+    400: { value: '#a1a1aa' },
+    500: { value: '#71717a' },
+    600: { value: '#52525b' },
+    700: { value: '#3f3f46' },
+  },
+  bg: {
+    border: { value: '#f97316' },
+    muted: { value: '#fed7aa' },
+    solid: { value: '#ea580c' },
+    subtle: { value: '#ffedd5' },
+  },
+  gray: {
+    contrast: { value: '#1f2937' },
+    emphasized: { value: '#374151' },
+    fg: { value: '#6b7280' },
+    subtle: { value: '#9ca3af' },
+  },
+};
+
+export const semanticColorTokens = {
+  orange: {
+    50: { value: '#fff7ed' },
+    400: { value: '#fb923c' },
+    subtle: { value: '{colors.orange.100}' },
+    muted: { value: '{colors.orange.200}' },
+    emphasized: { value: '{colors.orange.300}' },
+    solid: { value: '{colors.orange.500}' },
+    border: { value: '{colors.orange.600}' },
+  },
+  brand: {
+    // bold: { value: '{colors.brand.400}' },
+    // border: { value: '{colors.brand.border}' },
+    // minimal: { value: '{colors.brand.50}' },
+    // muted: { value: '{colors.brand.muted}' },
+    // emphasized: { value: '{colors.brand.emphasized}' },
+    // subtle: { value: '{colors.brand.subtle}' },
+    // solid: { value: '{colors.brand.solid}' },
+
+    contrast: { value: '{colors.brand.100}' },
+    muted: { value: '{colors.brand.100}' },
+    subtle: { value: '{colors.brand.200}' },
+    emphasized: { value: '{colors.brand.300}' },
+    solid: { value: '{colors.brand.500}' },
+    focusRing: { value: '{colors.brand.500}' },
+    fg: { value: '{colors.brand.700}' },
+  },
+  disabled: {
+    contrast: { value: '{colors.disabled.100}' },
+    muted: { value: '{colors.disabled.100}' },
+    subtle: { value: '{colors.disabled.200}' },
+    emphasized: { value: '{colors.disabled.300}' },
+    solid: { value: '{colors.disabled.500}' },
+    focusRing: { value: '{colors.disabled.500}' },
+    fg: { value: '{colors.disabled.700}' },
+  },
+  neutral: {
+    contrast: { value: '{colors.gray.contrast}' },
+    emphasized: { value: '{colors.gray.emphasized}' },
+    fg: { value: '{colors.gray.fg}' },
+    subtle: { value: '{colors.gray.subtle}' },
+  },
+};
