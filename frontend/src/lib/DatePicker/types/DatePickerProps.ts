@@ -4,10 +4,10 @@ import { DateRange } from '../hooks/useDateRange';
 
 type DatePickerProps = {
   disabledRanges?: DateRange[];
-  onClose?: () => void;
   dayTooltip?: DatePickerDayViewProps['tooltip'];
+  isMobile: boolean;
+  onClose?: () => void;
   selectable?: DateRange;
-  onClear?: () => void;
 } & (
   | {
       selected?: DateRange;

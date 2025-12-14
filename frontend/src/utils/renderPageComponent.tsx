@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { GlobalPropsContext } from '@/hooks/useGlobalProps';
 import User from '@/types/User';
+import { ResponsiveProvider } from './useResponsive';
 
 type ReactComponent = Parameters<typeof createElement>[0];
 
@@ -31,12 +32,14 @@ function AppWrapper({
   const [user, setUser] = useState(initialUser);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <GlobalPropsContext.Provider value={{ isPageScrolled, setIsPageScrolled, setUser, user }}>
-        <Page {...camelizedProps} />
-        <ReactQueryDevtools initialIsOpen={false} />
-      </GlobalPropsContext.Provider>
-    </QueryClientProvider>
+    <ResponsiveProvider>
+      <QueryClientProvider client={queryClient}>
+        <GlobalPropsContext.Provider value={{ isPageScrolled, setIsPageScrolled, setUser, user }}>
+          <Page {...camelizedProps} />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </GlobalPropsContext.Provider>
+      </QueryClientProvider>
+    </ResponsiveProvider>
   );
 }
 

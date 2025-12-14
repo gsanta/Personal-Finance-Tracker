@@ -1,6 +1,7 @@
 import Room from '@/types/Room';
 import { createListCollection, Select } from '@chakra-ui/react';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type RoomDropdownProps = {
   onChange: (roomId: string) => void;
@@ -9,6 +10,8 @@ type RoomDropdownProps = {
 };
 
 const RoomDropdown = ({ rooms, value, onChange }: RoomDropdownProps) => {
+  const { t } = useTranslation();
+
   const roomCollection = createListCollection({
     items: rooms.map((room) => ({ label: room.name, value: room.id })),
   });
@@ -16,9 +19,9 @@ const RoomDropdown = ({ rooms, value, onChange }: RoomDropdownProps) => {
   const values = useMemo(() => [value], [value]);
 
   return (
-    <Select.Root collection={roomCollection} value={values} onValueChange={(e) => onChange(e.value[0])} width="320px">
+    <Select.Root collection={roomCollection} value={values} onValueChange={(e) => onChange(e.value[0])} width="340px">
       <Select.HiddenSelect />
-      <Select.Label />
+      <Select.Label>{t('select_room')}</Select.Label>
 
       <Select.Control>
         <Select.Trigger>

@@ -1,74 +1,81 @@
+import { Button } from '@/components/button';
 import { useDatePickerContext } from './DatePicker.context';
-import { Box, Button, ButtonGroup, Text } from '@chakra-ui/react';
+import { Box, BoxProps, ButtonGroup, Separator, Tag } from '@chakra-ui/react';
+import { DateTime } from 'luxon';
+import useResponsive from '@/utils/useResponsive';
 
-const DatePickerFooter = ({
-  mode,
-  onApply,
-  onClear,
-  onClose,
-}: {
-  onClose: () => void;
-  onApply: () => void;
-  onClear?: () => void;
-  mode: 'day' | 'range';
-}) => {
-  const { preview, selected } = useDatePickerContext();
+const DatePickerFooter = ({ mode }: { mode: 'day' | 'range' }) => {
+  const { leftViewDate, preview, selected, setLeftViewDate } = useDatePickerContext();
 
-  const styleGrid = (mobile: string, desktop: string) => (mode === 'day' ? mobile : [mobile, desktop]);
+  const { isMobile } = useResponsive();
 
-  const displayDate = selected?.from || selected?.to;
+  const hasSelectedDate = Boolean(selected?.from || selected?.to);
+
+  const boxProps: BoxProps = isMobile
+    ? {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: hasSelectedDate ? 'space-between' : 'flex-end',
+      }
+    : {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr 1fr',
+      };
 
   return (
-    <Box
-      data-testid="footer"
-      display="grid"
-      gap={displayDate ? 24 : 0}
-      gridTemplateColumns="1fr auto 1fr"
-      gridTemplateRows={styleGrid(displayDate ? '1.25rem 2rem' : '0 2rem', 'unset')}
-    >
-      {!!onClear && (
-        <Button
-          color="purple.10"
-          gridColumn="1"
-          gridRow={styleGrid('2', '1')}
-          onClick={() => onClear()}
-          size="sm"
-          width="fit-content"
-        >
-          Clear
-        </Button>
+    <Box {...boxProps}>
+      {hasSelectedDate && (
+        <Box gridColumn="1">
+          <Tag.Root colorPalette="brand" size="lg" variant="subtle">
+            <Tag.Label>
+              {mode === 'day' ? (
+                selected?.from?.toFormat('DD', { locale: 'en-US' })
+              ) : (
+                <>
+                  {(!preview || preview === 'to') && selected?.from?.toFormat('DD', { locale: 'en-US' })}
+                  {selected?.to && (
+                    <>
+                      {selected?.from || selected?.to ? ' - ' : undefined}
+                      {(!preview || preview === 'from') && selected?.to?.toFormat('DD', { locale: 'en-US' })}
+                    </>
+                  )}
+                </>
+              )}
+            </Tag.Label>
+            <Tag.EndElement>
+              <Tag.CloseTrigger
+                onClick={() => {
+                  console.log('clear tag');
+                }}
+              />
+            </Tag.EndElement>
+          </Tag.Root>
+        </Box>
       )}
-      <Text
-        alignSelf="center"
-        color="text.secondary"
-        gridColumn={styleGrid('1 / 4', '2')}
-        gridRow="1"
-        justifySelf="center"
-        textStyle="md"
-      >
-        {mode === 'day' ? (
-          selected?.from?.toFormat('DD', { locale: 'en-US' })
-        ) : (
-          <>
-            {(!preview || preview === 'to') && selected?.from?.toFormat('DD', { locale: 'en-US' })}
-            {selected?.to && (
-              <>
-                {selected?.from || selected?.to ? ' - ' : undefined}
-                {(!preview || preview === 'from') && selected?.to?.toFormat('DD', { locale: 'en-US' })}
-              </>
-            )}
-          </>
-        )}
-      </Text>
-      <ButtonGroup gridColumn={styleGrid('2 / 4', '3')} gridRow={styleGrid('2', '1')} justifyContent="end">
-        <Button colorPalette="brand" onClick={onClose} variant="subtle" size="sm">
-          Cancel
-        </Button>
-
-        <Button colorPalette="brand" onClick={onApply} size="sm">
-          Apply
-        </Button>
-      </ButtonGroup>
+      {!isMobile && (
+        <Box gridColumn="2" display="flex" justifyContent="center">
+          <Separator
+            borderColor="{colors.brand.subtle}"
+            marginLeft="16px"
+            orientation="vertical"
+            height="56px"
+            size="md"
+          />
+        </Box>
+      )}
+      <Box gridColumn="3" display="flex" justifyContent="flex-end">
+        <ButtonGroup padding="{sizes.8}">
+          <Button
+            onClick={() =>
+              setLeftViewDate(leftViewDate.set({ month: DateTime.now().month, year: DateTime.now().year }))
+            }
+            colorPalette="brand"
+            variant="subtle"
+          >
+            Today
+          </Button>
+        </ButtonGroup>
+      </Box>
     </Box>
   );
 };

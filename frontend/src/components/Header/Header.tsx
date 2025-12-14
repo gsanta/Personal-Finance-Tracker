@@ -30,7 +30,7 @@ const Header = () => {
       <Box
         as="header"
         bg={isPageScrolled ? 'orange.solid' : 'transparent'}
-        h="16"
+        h="40"
         shadow={isPageScrolled ? 'md' : 'none'}
         position="sticky"
         top="0"

@@ -3,11 +3,11 @@ import Header from './Header/Header';
 import { Box, ChakraProvider, createSystem, defaultConfig } from '@chakra-ui/react';
 import '../utils/i18n';
 import config from '@/lib/theme/config';
+import { ResponsiveProvider } from '@/utils/useResponsive';
 
 type PageProps = {
   children: ReactNode;
 };
-
 
 const system = createSystem(defaultConfig, config);
 

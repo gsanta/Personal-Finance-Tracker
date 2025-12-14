@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import DatePickerMonth from './DatePickerMonth';
 import { DatePickerContext } from './DatePicker.context';
 import DatePickerFooter from './DatePickerFooter';
-import { Box } from '@chakra-ui/react';
+import { Box, Separator } from '@chakra-ui/react';
 import useDisabledDays from './hooks/useDisabledDays';
 import useDateRange from './hooks/useDateRange';
 import DatePickerProps from './types/DatePickerProps';
@@ -19,17 +19,11 @@ export function useObjectMemo<T extends object>(obj: T): T {
 }
 
 const DatePicker = (props: DatePickerProps) => {
-  const { dayTooltip, disabledRanges, mode, onApply, onClear, onClose, selectable, selected } = props;
+  const { dayTooltip, disabledRanges, isMobile, mode, onApply, selectable, selected } = props;
 
   const disabledDays = useDisabledDays(disabledRanges);
 
   const today = DateTime.now().startOf('day');
-
-  const handleClose = () => {
-    onClose?.();
-    setDateTo(undefined);
-    setDateFrom(undefined);
-  };
 
   const handleApply = (from: typeof dateFrom, to: typeof dateTo) => {
     if (onApply) {
@@ -39,14 +33,11 @@ const DatePicker = (props: DatePickerProps) => {
         onApply({ from, to });
       }
     }
-
-    handleClose();
   };
 
   const { dateFrom, dateTo, setDateFrom, setDateTo } = useSelection({
     mode: mode || 'range',
     selected,
-    selectable,
   });
 
   const { leftViewDate, rightViewDate, setLeftViewDate, setRightViewDate } = useViewDate({
@@ -70,7 +61,7 @@ const DatePicker = (props: DatePickerProps) => {
     handleApply,
   });
 
-  const isSingleMonthView = mode === 'day';
+  const isSingleMonthView = mode === 'day' || isMobile;
 
   const ctx = useObjectMemo({
     dayTooltip,
@@ -92,7 +83,7 @@ const DatePicker = (props: DatePickerProps) => {
   return (
     <DatePickerContext value={ctx}>
       <Box>
-        <Box display="flex" gap="32" marginBottom="{sizes.24}">
+        <Box display="flex" gap="{sizes.24}">
           <DatePickerMonth
             controls={isSingleMonthView ? 'both' : 'left'}
             onViewDateChange={setLeftViewDate}
@@ -100,15 +91,19 @@ const DatePicker = (props: DatePickerProps) => {
           />
 
           {!isSingleMonthView && (
-            <DatePickerMonth controls="right" onViewDateChange={setRightViewDate} viewDate={rightViewDate} />
+            <>
+              <Separator
+                borderColor="{colors.brand.subtle}"
+                ml="{sizes.16}"
+                orientation="vertical"
+                height="360px"
+                size="md"
+              />
+              <DatePickerMonth controls="right" onViewDateChange={setRightViewDate} viewDate={rightViewDate} />
+            </>
           )}
         </Box>
-        <DatePickerFooter
-          mode={mode || 'range'}
-          onApply={() => handleApply(dateFrom, dateTo)}
-          onClear={onClear}
-          onClose={handleClose}
-        />
+        <DatePickerFooter mode={mode || 'range'} />
       </Box>
     </DatePickerContext>
   );
