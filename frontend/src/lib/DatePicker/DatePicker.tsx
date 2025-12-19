@@ -94,7 +94,7 @@ const DatePicker = (props: DatePickerProps) => {
             <>
               <Separator
                 borderColor="{colors.brand.subtle}"
-                ml="{sizes.16}"
+                ml="{sizes.8}"
                 orientation="vertical"
                 height="360px"
                 size="md"

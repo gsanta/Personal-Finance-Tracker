@@ -30,12 +30,14 @@ const MonthSelect = ({ side }: MonthSelectProps) => {
 
   const setDate = side === 'left' ? setLeftViewDate : setRightViewDate;
 
+  const isReadonly = side === 'right';
+
   return (
     <Select.Root
-      colorPalette="brand"
       collection={months}
       value={[viewDate.get('month').toString()]}
       onValueChange={(e) => setDate(viewDate.set({ month: Number(e.value) }))}
+      readOnly={isReadonly}
       size="md"
       variant="subtle"
       width="{sizes.128}"
@@ -45,9 +47,11 @@ const MonthSelect = ({ side }: MonthSelectProps) => {
         <Select.Trigger>
           <Select.ValueText placeholder="Select month" />
         </Select.Trigger>
-        <Select.IndicatorGroup>
-          <Select.Indicator />
-        </Select.IndicatorGroup>
+        {!isReadonly && (
+          <Select.IndicatorGroup>
+            <Select.Indicator />
+          </Select.IndicatorGroup>
+        )}
       </Select.Control>
       <Portal>
         <Select.Positioner>

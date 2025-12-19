@@ -2,13 +2,21 @@ import { api, bookingsPath } from '@/utils/apiRoutes';
 import { useMutation } from '@tanstack/react-query';
 
 type BookingsRequest = {
+  cats?: string[];
+  foodFromOwner?: boolean;
   endDate: string;
+  notes?: string;
   roomId: string;
   startDate: string;
 };
 
 const useBookRoom = () => {
-  const { mutateAsync: createBooking } = useMutation<unknown, unknown, BookingsRequest>({
+  const {
+    error,
+    isPending,
+    isSuccess,
+    mutateAsync: createBooking,
+  } = useMutation<unknown, unknown, BookingsRequest>({
     mutationFn: async (data) => {
       return api.post(bookingsPath, data);
     },
@@ -16,6 +24,9 @@ const useBookRoom = () => {
 
   return {
     createBooking,
+    createBookingError: error,
+    isCreateBookingLoading: isPending,
+    isCreateBookingSuccess: isSuccess,
   };
 };
 

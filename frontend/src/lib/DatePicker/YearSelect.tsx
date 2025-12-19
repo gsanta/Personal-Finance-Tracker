@@ -23,23 +23,27 @@ const MonthSelect = ({ side }: MonthSelectProps) => {
   const viewDate = side === 'left' ? leftViewDate : rightViewDate;
   const setDate = side === 'left' ? setLeftViewDate : setRightViewDate;
 
+  const isReadonly = side === 'right';
+
   return (
     <Select.Root
-      colorPalette="brand"
       collection={years}
       value={[viewDate.get('year').toString()]}
       onValueChange={(e) => setDate(viewDate.set({ year: Number(e.value) }))}
+      readOnly={isReadonly}
       variant="subtle"
       width="{sizes.96}"
     >
       <Select.HiddenSelect />
       <Select.Control>
         <Select.Trigger>
-          <Select.ValueText colorPalette="brand" placeholder="Select year" />
+          <Select.ValueText />
         </Select.Trigger>
-        <Select.IndicatorGroup>
-          <Select.Indicator />
-        </Select.IndicatorGroup>
+        {!isReadonly && (
+          <Select.IndicatorGroup>
+            <Select.Indicator />
+          </Select.IndicatorGroup>
+        )}
       </Select.Control>
       <Portal>
         <Select.Positioner>

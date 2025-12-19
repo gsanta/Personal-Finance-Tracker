@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
     start_Date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
+    food_from_owner BOOLEAN NOT NULL DEFAULT FALSE,
+    notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

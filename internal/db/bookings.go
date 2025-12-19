@@ -14,10 +14,12 @@ type Booking struct {
 }
 
 type NewBooking struct {
-	EndDate   string
-	StartDate string
-	RoomId    string
-	UserId    string
+	EndDate       string
+	StartDate     string
+	RoomId        string
+	UserId        string
+	FoodFromOwner bool
+	Notes         string
 }
 
 func ListBookings(db *sql.DB, fromDate *time.Time) ([]Booking, error) {
@@ -50,10 +52,30 @@ func ListBookings(db *sql.DB, fromDate *time.Time) ([]Booking, error) {
 	return out, rows.Err()
 }
 
-func InsertBooking(db *sql.DB, booking *NewBooking) error {
-	query := `INSERT INTO bookings (user_id, room_id, start_date, end_date) 
-			  VALUES ($1, $2, $3, $4)`
+func InsertBooking(db *sql.DB, booking *NewBooking) (string, error) {
+	query := `INSERT INTO bookings (user_id, room_id, start_date, end_date, food_from_owner, notes) 
+			  VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 
-	_, err := db.Exec(query, booking.UserId, booking.RoomId, booking.StartDate, booking.EndDate)
-	return err
+	var bookingID string
+	err := db.QueryRow(query, booking.UserId, booking.RoomId, booking.StartDate, booking.EndDate, booking.FoodFromOwner, booking.Notes).Scan(&bookingID)
+	return bookingID, err
+}
+
+func InsertBookingCats(db *sql.DB, bookingID string, catNames []string) error {
+	if len(catNames) == 0 {
+		return nil
+	}
+
+	query := `INSERT INTO booking_cats (booking_id, guest_cat_name) VALUES ($1, $2)`
+
+	for _, catName := range catNames {
+		if catName != "" {
+			_, err := db.Exec(query, bookingID, catName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

@@ -26,7 +26,7 @@ const DatePickerFooter = ({ mode }: { mode: 'day' | 'range' }) => {
     <Box {...boxProps}>
       {hasSelectedDate && (
         <Box gridColumn="1">
-          <Tag.Root colorPalette="brand" size="lg" variant="subtle">
+          <Tag.Root colorPalette="brand" size="lg" variant="solid">
             <Tag.Label>
               {mode === 'day' ? (
                 selected?.from?.toFormat('DD', { locale: 'en-US' })

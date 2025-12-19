@@ -38,7 +38,7 @@ export const DatePickerHeaderNext = ({ label }: { label: string }) => {
       colorPalette="brand"
       onClick={onNext}
       variant="subtle"
-      visibility={controls === 'left' ? 'hidden' : undefined}
+      visibility={controls === 'right' ? 'hidden' : undefined}
     >
       <BiChevronRight />
     </IconButton>
@@ -58,14 +58,7 @@ const DatePickerHeader = ({
 }) => {
   const ctx = useObjectMemo({ controls, onNext, onPrevious });
   return (
-    <Box
-      alignItems="center"
-      display="grid"
-      gap="4"
-      gridTemplateColumns="2rem auto 2rem"
-      marginBottom="{sizes.24}"
-      width="17.5rem"
-    >
+    <Box alignItems="center" display="flex" justifyContent="flex-end" gap="4" marginBottom="{sizes.24}" width="100%">
       <HeaderContext value={ctx}>{children}</HeaderContext>
     </Box>
   );

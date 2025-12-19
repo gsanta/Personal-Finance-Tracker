@@ -41,14 +41,14 @@ const DatePickerMonth = ({ controls, onViewDateChange, viewDate }: Props) => {
 
   const monthLabelId = useId();
   return (
-    <Box data-testid={`controls-${controls}`}>
+    <Box>
       <DatePickerHeader controls={controls} onNext={onNextMonth} onPrevious={onPreviousMonth}>
-        <DatePickerHeaderPrevious label="previous month" />
+        {(controls === 'left' || controls === 'both') && <DatePickerHeaderPrevious label="previous month" />}
         <DatePickerHeaderContent id={monthLabelId}>
           <MonthSelect side={controls === 'both' ? 'left' : controls} />
           <YearSelect side={controls === 'both' ? 'left' : controls} />
         </DatePickerHeaderContent>
-        <DatePickerHeaderNext label="next month" />
+        {(controls === 'left' || controls === 'both') && <DatePickerHeaderNext label="next month" />}
       </DatePickerHeader>
 
       <DatePickerGrid alignItems="center" gridTemplateRows="2rem" justifyItems="center">

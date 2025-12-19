@@ -1,44 +1,93 @@
 import Page from '@/components/Page';
-import { Box, Button, ButtonGroup, Separator } from '@chakra-ui/react';
+import { Alert, Box, Button, ButtonGroup, Heading, Separator, Switch, Textarea } from '@chakra-ui/react';
 import Room from '@/types/Room';
 import RoomDropdown from './components/RoomDropdown';
 import Booking from '@/types/Booking';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import useBookRoom from '@/hooks/useBookRoom';
 import DatePicker from '@/lib/DatePicker/DatePicker';
 import { createDateRange, DateRange } from '@/lib/DatePicker/hooks/useDateRange';
 import { DateTime } from 'luxon';
 import { t } from 'i18next';
 import useResponsive from '@/utils/useResponsive';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
+import CatInputList from './components/CatInputList';
 
 type RoomsPageProps = {
   bookings: Booking[];
   rooms: Room[];
 };
 
-const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
-  const [selectedRoomId, setSelectedRoomId] = useState<string>(rooms[0]?.id || '');
+export type BookingForm = {
+  catNames: {
+    name: string;
+  }[];
+  notes: string;
+  foodFromOwner: boolean;
+  range: DateRange;
+  roomId: string;
+};
 
+const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
   const { isMobile } = useResponsive();
 
-  const [range, setRange] = useState<DateRange>();
+  const [isSticky, setIsSticky] = useState(false);
+  const buttonGroupRef = useRef<HTMLDivElement>(null);
+
+  const methods = useForm<BookingForm>({
+    defaultValues: {
+      catNames: [{ name: '' }],
+      notes: '',
+      foodFromOwner: false,
+      range: undefined,
+      roomId: rooms[0]?.id || '',
+    },
+  });
+
+  const { control, handleSubmit, register, reset, watch } = methods;
+
+  const selectedRoomId = watch('roomId');
+
+  useEffect(() => {
+    reset({ roomId: rooms[0].id });
+  }, [rooms]);
+
+  useEffect(() => {
+    if (!buttonGroupRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSticky(!entry.isIntersecting);
+      },
+      {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0,
+      },
+    );
+
+    return () => observer.disconnect();
+  }, []);
 
   const bookingsForSelectedRoom = useMemo(
     () => bookings.filter((booking) => booking.roomId === selectedRoomId),
     [bookings, selectedRoomId],
   );
 
-  const { createBooking } = useBookRoom();
+  const { createBooking, createBookingError, isCreateBookingLoading, isCreateBookingSuccess } = useBookRoom();
 
-  const handleCreateBooking = () => {
-    if (selectedRoomId && range?.from && range?.to) {
+  const handleCreateBooking = handleSubmit((data: BookingForm) => {
+    if (selectedRoomId && data.range?.from && data.range?.to) {
       createBooking({
+        endDate: data.range.to.endOf('day').toISO(),
+        foodFromOwner: data.foodFromOwner,
+        notes: data.notes,
         roomId: selectedRoomId,
-        startDate: range.from.toISODate()!,
-        endDate: range.to.toISODate()!,
+        startDate: data.range.from.startOf('day').toISO(),
+        cats: data.catNames.filter((cat) => cat.name.trim() !== '').map((cat) => cat.name),
       });
     }
-  };
+  });
 
   const ranges = useMemo<DateRange[]>(
     () =>
@@ -51,41 +100,108 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
   return (
     <Page>
       <Box
-        display="flex"
-        flexDir="column"
-        alignItems="center"
-        padding="4"
-        minHeight="calc(100vh - 64px)"
+        height="calc(100vh - 42px)"
         overflowY="auto"
-        position="relative"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        paddingX="4"
+        paddingTop="4"
       >
-        <Box marginTop="2rem" display="flex" flexDirection="column" gap="4" width={['340px', 'initial']}>
-          <RoomDropdown rooms={rooms} value={selectedRoomId} onChange={setSelectedRoomId} />
-          <Box>
-            <Separator borderColor="{colors.brand.subtle}" size="md" paddingBottom={['{sizes.12}', 0]} />
-            {!isMobile && (
-              <Box display="flex" justifyContent="center">
-                <Separator
-                  borderColor="{colors.brand.subtle}"
-                  size="md"
-                  orientation="vertical"
-                  height="{sizes.16}"
-                  marginLeft="{sizes.16}"
-                />
-              </Box>
-            )}
-            <DatePicker disabledRanges={ranges} isMobile={isMobile} onApply={(d) => setRange(d)} selected={range} />
+        <FormProvider {...methods}>
+          <Box
+            as="form"
+            marginTop="2rem"
+            display="flex"
+            flexDirection="column"
+            gap="4"
+            onSubmit={handleCreateBooking}
+            width={['340px', 'initial']}
+          >
+            <RoomDropdown rooms={rooms} />
+            <Box>
+              <Separator borderColor="{colors.brand.subtle}" size="md" paddingBottom={['{sizes.12}', 0]} />
+              {!isMobile && (
+                <Box display="flex" justifyContent="center">
+                  <Separator
+                    borderColor="{colors.brand.subtle}"
+                    size="md"
+                    orientation="vertical"
+                    height="{sizes.16}"
+                    marginLeft="{sizes.16}"
+                  />
+                </Box>
+              )}
+              <Controller
+                control={control}
+                name="range"
+                render={({ field }) => (
+                  <DatePicker
+                    disabledRanges={ranges}
+                    isMobile={isMobile}
+                    onApply={(d) => field.onChange(d)}
+                    selected={field.value}
+                  />
+                )}
+              />
+              <Separator borderColor="{colors.brand.subtle}" size="md" />
+            </Box>
+            <CatInputList />
             <Separator borderColor="{colors.brand.subtle}" size="md" />
+            <Box display="flex" flexDirection="column" gap="{sizes.32}">
+              <Heading pb="{sizes.16}">Egyéb</Heading>
+              <Controller
+                control={control}
+                name="foodFromOwner"
+                render={({ field }) => (
+                  <Switch.Root
+                    colorPalette="brand"
+                    checked={field.value}
+                    display="flex"
+                    justifyContent="space-between"
+                    onCheckedChange={(e) => field.onChange(e.checked)}
+                    width="100%"
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Label>Ételt a gazdi hoz?</Switch.Label>
+                    <Switch.Control />
+                  </Switch.Root>
+                )}
+              />
+              <Textarea placeholder="Egyéb megjegyzés..." {...register('notes')} />
+
+              {isCreateBookingSuccess && (
+                <Alert.Root status="success">
+                  <Alert.Indicator />
+                  <Alert.Title>Sikeres foglalás</Alert.Title>
+                </Alert.Root>
+              )}
+            </Box>
+            <Box
+              ref={buttonGroupRef}
+              position="sticky"
+              bottom="0"
+              backgroundColor={isSticky ? 'white' : 'transparent'}
+              paddingY={isSticky ? '4' : '0'}
+              width="100%"
+              bgColor="{colors.brand.muted}"
+              borderTopWidth="2px"
+              borderTopStyle="solid"
+              borderTopColor="{colors.brand.solid}"
+              paddingInline="{sizes.12}"
+              paddingBlock="{sizes.12}"
+            >
+              <ButtonGroup>
+                <Button colorPalette="brand" onClick={() => reset()} variant="subtle">
+                  {t('clear')}
+                </Button>
+                <Button colorPalette="brand" type="submit" loading={isCreateBookingLoading} variant="solid">
+                  {t('booking')}
+                </Button>
+              </ButtonGroup>
+            </Box>
           </Box>
-          <ButtonGroup>
-            <Button colorPalette="brand" onClick={() => setRange(undefined)} variant="subtle">
-              {t('clear')}
-            </Button>
-            <Button colorPalette="brand" onClick={handleCreateBooking}>
-              {t('booking')}
-            </Button>
-          </ButtonGroup>
-        </Box>
+        </FormProvider>
       </Box>
     </Page>
   );

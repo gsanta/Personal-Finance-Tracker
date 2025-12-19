@@ -16,9 +16,12 @@ type BookingsHandler struct {
 }
 
 type BookingRequest struct {
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
-	RoomId    string `json:"roomId"`
+	StartDate     string   `json:"startDate"`
+	EndDate       string   `json:"endDate"`
+	RoomId        string   `json:"roomId"`
+	FoodFromOwner bool     `json:"foodFromOwner"`
+	Notes         string   `json:"notes"`
+	Cats          []string `json:"cats"`
 }
 
 func NewBookingsHandler(db *sql.DB) *BookingsHandler {
@@ -48,19 +51,33 @@ func (h *BookingsHandler) CreateBooking(c *gin.Context) {
 	user, _ := web.GetCurrentUser(c)
 
 	booking := &db.NewBooking{
-		EndDate:   endDate.Format(time.RFC3339),
-		StartDate: startDate.Format(time.RFC3339),
-		RoomId:    req.RoomId,
-		UserId:    user.ID,
+		EndDate:       endDate.Format(time.RFC3339),
+		StartDate:     startDate.Format(time.RFC3339),
+		RoomId:        req.RoomId,
+		UserId:        user.ID,
+		FoodFromOwner: req.FoodFromOwner,
+		Notes:         req.Notes,
 	}
 
 	log.Printf("user: %v", user)
 
-	insertErr := db.InsertBooking(h.DB, booking)
-
+	bookingID, insertErr := db.InsertBooking(h.DB, booking)
 	if insertErr != nil {
 		log.Printf("Failed to insert booking: %v", insertErr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to book date"})
 		return
 	}
+
+	// Insert cat names if provided
+	if len(req.Cats) > 0 {
+		catErr := db.InsertBookingCats(h.DB, bookingID, req.Cats)
+		if catErr != nil {
+			log.Printf("Failed to insert booking cats: %v", catErr)
+			// Note: booking is already created, but cats failed
+			c.JSON(http.StatusPartialContent, gin.H{"warning": "Booking created but failed to add cats"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Booking created successfully", "bookingId": bookingID})
 }

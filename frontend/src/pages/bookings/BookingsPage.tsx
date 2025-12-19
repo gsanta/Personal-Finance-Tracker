@@ -1,7 +1,6 @@
 import Calendar from '@/components/Calendar/Calendar';
 import Page from '@/components/Page';
 import { Box } from '@chakra-ui/react';
-import backgroundImage from '@/assets/images/cat_booking_holidary.png';
 
 const BookingsPage = () => {
   return (
@@ -11,7 +10,7 @@ const BookingsPage = () => {
         flexDir="column"
         alignItems="center"
         padding="4"
-        minHeight="calc(100vh - 64px)"
+        minHeight="calc(100vh - 42px)"
         overflowY="auto"
         position="relative"
         _before={{
