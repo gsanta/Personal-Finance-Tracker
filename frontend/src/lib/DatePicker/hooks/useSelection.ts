@@ -1,12 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
-import { createDateRange, DateRange } from './useDateRange';
 import { DateTime } from 'luxon';
-import DatePickerProps from '../types/DatePickerProps';
+import { DatePickerProps, DateRange } from '../types/DatePicker.types';
 
 type UseSelectionParams = {
   mode: DatePickerProps['mode'];
   selected: DatePickerProps['selected'];
 };
+
+export function createDateRange(date1?: DateTime, date2?: DateTime, editable = false): DateRange {
+  return {
+    from: !date1 || !date2 || date1 < date2 ? date1 : date2,
+    editable: editable,
+    to: !date1 || !date2 || date1 < date2 ? date2 : date1,
+  };
+}
 
 const useSelection = ({ mode, selected }: UseSelectionParams) => {
   const initialRange = useMemo<DateRange | undefined>(

@@ -9,7 +9,7 @@ const DatePickerFooter = ({ mode }: { mode: 'day' | 'range' }) => {
 
   const { isMobile } = useResponsive();
 
-  const hasSelectedDate = Boolean(selected?.from || selected?.to);
+  const hasSelectedDate = selected?.from && selected?.to && !preview;
 
   const boxProps: BoxProps = isMobile
     ? {

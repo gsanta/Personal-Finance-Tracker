@@ -30,12 +30,6 @@ function useViewDate({ dateFrom }: { dateFrom?: DateTime }): {
   const setLeftViewDate = useCallback((date: DateTime | DateObjectUnits) => updateViewDate({ left: date }), []);
   const setRightViewDate = useCallback((date: DateTime | DateObjectUnits) => updateViewDate({ right: date }), []);
 
-  useEffect(() => {
-    if (dateFrom) {
-      setLeftViewDate(dateFrom.startOf('month'));
-    }
-  }, [dateFrom]);
-
   return {
     leftViewDate,
     rightViewDate,

@@ -1,10 +1,13 @@
 import { DateTime } from 'luxon';
-import { DatePickerDayViewProps } from '../DatePickerDay';
-import { DateRange } from '../hooks/useDateRange';
 
-type DatePickerProps = {
+export type DateRange = {
+  editable?: boolean;
+  from?: DateTime;
+  to?: DateTime;
+};
+
+export type DatePickerProps = {
   disabledRanges?: DateRange[];
-  dayTooltip?: DatePickerDayViewProps['tooltip'];
   isMobile: boolean;
   onClose?: () => void;
   selectable?: DateRange;
@@ -20,5 +23,3 @@ type DatePickerProps = {
       mode: 'day';
     }
 );
-
-export default DatePickerProps;

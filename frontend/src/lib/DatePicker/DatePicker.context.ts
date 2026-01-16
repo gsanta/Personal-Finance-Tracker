@@ -1,11 +1,9 @@
 import { DateTime } from 'luxon';
-import { DateRange } from './hooks/useDateRange';
-import type { DatePickerDayViewProps } from './DatePickerDay';
 import { createContext } from '@chakra-ui/react';
+import { DateRange } from './types/DatePicker.types';
 
 interface Context {
-  dayTooltip?: DatePickerDayViewProps['tooltip'];
-  disabledDays: Set<string>;
+  disabledRanges: DateRange[];
   leftViewDate: DateTime;
   selectable?: DateRange;
   selected?: DateRange;

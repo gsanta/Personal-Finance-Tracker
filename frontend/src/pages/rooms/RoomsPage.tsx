@@ -6,12 +6,13 @@ import Booking from '@/types/Booking';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import useBookRoom from '@/hooks/useBookRoom';
 import DatePicker from '@/lib/DatePicker/DatePicker';
-import { createDateRange, DateRange } from '@/lib/DatePicker/hooks/useDateRange';
 import { DateTime } from 'luxon';
 import { t } from 'i18next';
 import useResponsive from '@/utils/useResponsive';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import CatInputList from './components/CatInputList';
+import { DateRange } from '@/lib/DatePicker/types/DatePicker.types';
+import { createDateRange } from '@/lib/DatePicker/hooks/useSelection';
 
 type RoomsPageProps = {
   bookings: Booking[];
@@ -92,7 +93,7 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
   const ranges = useMemo<DateRange[]>(
     () =>
       bookingsForSelectedRoom.map((booking) =>
-        createDateRange(DateTime.fromISO(booking.startDate), DateTime.fromISO(booking.endDate)),
+        createDateRange(DateTime.fromISO(booking.startDate), DateTime.fromISO(booking.endDate), booking.isCurrentUser),
       ),
     [bookingsForSelectedRoom],
   );
@@ -195,7 +196,7 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
                 <Button colorPalette="brand" onClick={() => reset()} variant="subtle">
                   {t('clear')}
                 </Button>
-                <Button colorPalette="brand" type="submit" loading={isCreateBookingLoading} variant="solid">
+                <Button colorPalette="brand" loading={isCreateBookingLoading} type="submit" variant="solid">
                   {t('booking')}
                 </Button>
               </ButtonGroup>

@@ -1,3 +1,5 @@
+import { sub } from 'date-fns';
+
 export const colorTokens = {
   brand: {
     50: { value: '#fff7ed' },
@@ -28,6 +30,7 @@ export const colorTokens = {
   gray: {
     contrast: { value: '#1f2937' },
     emphasized: { value: '#374151' },
+    focusRing: { value: '#6b7280' },
     fg: { value: '#6b7280' },
     subtle: { value: '#9ca3af' },
   },
@@ -43,6 +46,22 @@ export const semanticColorTokens = {
     solid: { value: '{colors.orange.500}' },
     border: { value: '{colors.orange.600}' },
   },
+  green: {
+    fg: { value: '{colors.green.700}' },
+    subtle: { value: '{colors.green.100}' },
+    muted: { value: '{colors.green.200}' },
+    emphasized: { value: '{colors.green.300}' },
+    solid: { value: '{colors.green.600}' },
+    focusRing: { value: '{colors.green.500}' },
+  },
+  yellow: {
+    fg: { value: '{colors.yellow.800}' },
+    subtle: { value: '{colors.yellow.100}' },
+    muted: { value: '{colors.yellow.200}' },
+    emphasized: { value: '{colors.yellow.300}' },
+    solid: { value: '{colors.yellow.300}' },
+    focusRing: { value: '{colors.yellow.500}' },
+  },
   brand: {
     // bold: { value: '{colors.brand.400}' },
     // border: { value: '{colors.brand.border}' },
@@ -56,8 +75,8 @@ export const semanticColorTokens = {
     muted: { value: '{colors.brand.100}' },
     subtle: { value: '{colors.brand.200}' },
     emphasized: { value: '{colors.brand.300}' },
+    focusRing: { value: '{colors.brand.400}' },
     solid: { value: '{colors.brand.500}' },
-    focusRing: { value: '{colors.brand.500}' },
     fg: { value: '{colors.brand.700}' },
   },
   disabled: {
@@ -73,6 +92,7 @@ export const semanticColorTokens = {
     contrast: { value: '{colors.gray.contrast}' },
     emphasized: { value: '{colors.gray.emphasized}' },
     fg: { value: '{colors.gray.fg}' },
+    focusRing: { value: '{colors.gray.focusRing}' },
     subtle: { value: '{colors.gray.subtle}' },
   },
 };

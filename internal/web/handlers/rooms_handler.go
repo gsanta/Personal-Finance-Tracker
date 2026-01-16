@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
+	"github.com/gsanta/Personal-Finance-Tracker/internal/web/presenters"
 )
 
 func RoomsHandler(c *gin.Context) {
@@ -29,13 +30,9 @@ func RoomsHandler(c *gin.Context) {
 		return
 	}
 
-	for i := range bookings {
-		if bookings[i].UserId != user.ID {
-			bookings[i].UserId = ""
-		}
-	}
+	presented := presenters.PresentBookings(bookings, user.ID)
 
-	pageProps["bookings"] = bookings
+	pageProps["bookings"] = presented
 	pageProps["rooms"] = rooms
 
 	web.RenderPage(c.Writer, c.Request, pageProps)

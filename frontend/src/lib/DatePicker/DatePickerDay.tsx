@@ -1,11 +1,12 @@
-import { ReactNode, useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { DateTime, Settings } from 'luxon';
 import { useDatePickerContext } from './DatePicker.context';
 import { useSlotRecipe } from '@chakra-ui/react/styled-system';
 import { datePickerDayRecipe } from './DatePickerDay.recipe';
-import { Box, createContext, Text } from '@chakra-ui/react';
-import { Tooltip } from '../tooltip';
-import { ButtonProps } from '@/components/button';
+import { Box, Text } from '@chakra-ui/react';
+import useCalendarDayRange from './hooks/useCalendarDayRange';
+import useCalendarDayStyle from './hooks/useCalendarDayStyle';
+import useCalendarDayInMonthNumber from './hooks/useCalendarDayInMonthNumber';
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/64995
 Settings.throwOnInvalid = true;
@@ -16,140 +17,117 @@ declare module 'luxon' {
   }
 }
 
-interface Context {
-  onPreviousMonth: () => void;
-  onNextMonth: () => void;
-  viewDate: DateTime;
-}
-export interface DatePickerDayViewProps {
-  tooltip?(day: Pick<DatePickerDayViewProps, 'selectable' | 'date'>): string | undefined;
-  onClick: () => void;
-  date: DateTime;
-  onMouseEnter: () => void;
-  selectable: boolean;
-  today: boolean;
-  currentMonth: boolean;
-  showOutsideDays: boolean;
-  preview: 'from' | 'to' | undefined;
-  selection?: 'from' | 'to' | 'between' | 'incomplete';
-  children: ReactNode;
-}
-
-const DatePickerDayView = ({
-  children,
-  currentMonth,
-  date,
-  tooltip,
-  onClick,
-  onMouseEnter,
-  preview,
-  selectable,
-  selection,
-  today,
-}: DatePickerDayViewProps) => {
-  const recipe = useSlotRecipe({ recipe: datePickerDayRecipe });
-  const styles = recipe({
-    currentMonth,
-    disabled: !selectable,
-    today,
-    selection,
-    beingMoved: selection === preview,
-  });
-
-  const ariaProps: ButtonProps = {};
-
-  if (currentMonth) {
-    ariaProps['aria-selected'] =
-      selection === 'from' || selection === 'to' || selection === 'incomplete' || selection === 'between';
-  } else {
-    ariaProps.tabIndex = -1;
-  }
-
-  const tooltipText = tooltip?.({ selectable, date });
-
-  return (
-    <Tooltip content={tooltipText} disabled={!tooltipText}>
-      <Box
-        asChild
-        {...ariaProps}
-        css={styles.day}
-        disabled={!selectable}
-        onClick={onClick}
-        onFocus={onMouseEnter}
-        onMouseEnter={onMouseEnter}
-        role="option"
-        type="button"
-      >
-        <button>
-          <Text css={styles.text}>{children}</Text>
-        </button>
-      </Box>
-    </Tooltip>
-  );
+type DatePickerDayProps = {
+  datePickerGridIndex: number;
+  monthFirstDay: DateTime;
 };
-const [DatePickerDayContext, useDatePickerDayContext] = createContext<Context>();
-export { DatePickerDayContext };
 
-const DatePickerDay = ({ n }: { n: number }) => {
+const DatePickerDay = ({ datePickerGridIndex, monthFirstDay }: DatePickerDayProps) => {
   const {
-    disabledDays,
+    disabledRanges,
     onPreview,
     onSelect,
-    dayTooltip,
-    preview,
     selectable,
     selected,
     showOutsideMonths: showOutsideDays,
     today,
   } = useDatePickerContext();
-  const { onNextMonth, onPreviousMonth, viewDate } = useDatePickerDayContext();
   const { from: dateSelectableFrom, to: dateSelectableTo } = selectable || {};
   const { from: dateSelectedFrom, to: dateSelectedTo } = selected || {};
 
-  const date = viewDate.plus({ days: n - viewDate.weekday });
-  const isoDate = useMemo(() => date.toISODate()!, [date]);
-  const daysInPreviousMonth = viewDate.minus({ month: 1 }).daysInMonth;
+  const date = monthFirstDay.plus({ days: datePickerGridIndex - monthFirstDay.weekday });
+  const daysInPreviousMonth = monthFirstDay.minus({ month: 1 }).daysInMonth;
 
-  const dayOfWeek = viewDate.weekday;
-  const { daysInMonth } = viewDate;
+  const dayOfWeek = monthFirstDay.weekday;
+  const daysInMonth = monthFirstDay.daysInMonth;
 
-  const isPreviousMonth = n < dayOfWeek;
-  const isNextMonth = n - dayOfWeek >= daysInMonth;
+  const currentMonthStartsAtDayOfWeek = monthFirstDay.weekday;
+  const currentMonthDaysInMonth = monthFirstDay.daysInMonth;
+
+  const isPreviousMonth = datePickerGridIndex < dayOfWeek;
+  const isNextMonth = datePickerGridIndex - dayOfWeek >= daysInMonth;
   const isCurrentMonth = !isPreviousMonth && !isNextMonth;
   const isAfterSelectableFromDate = !dateSelectableFrom || date >= dateSelectableFrom;
   const isBeforeSelectableToDate = !dateSelectableTo || date <= dateSelectableTo;
-  const isSelectable = !disabledDays.has(isoDate) && isAfterSelectableFromDate && isBeforeSelectableToDate;
+  const currentDisabledRange = useMemo(
+    () =>
+      disabledRanges?.find((range) => {
+        const fromDate = range.from;
+        const toDate = range.to;
+        return (!fromDate || date >= fromDate) && (!toDate || date <= toDate);
+      }),
+    [disabledRanges, date],
+  );
+  const isSelectable = !currentDisabledRange && isAfterSelectableFromDate && isBeforeSelectableToDate;
+  const isToday = today.equals(
+    monthFirstDay.set({ day: datePickerGridIndex - currentMonthStartsAtDayOfWeek + 1 }).startOf('day'),
+  );
 
-  const hasSelectionRange = dateSelectedFrom && dateSelectedTo && !dateSelectedFrom.equals(dateSelectedTo);
-
-  let selection: 'from' | 'to' | 'between' | 'incomplete' | undefined;
   const interactive = isCurrentMonth || showOutsideDays;
-  if (hasSelectionRange && interactive && date > dateSelectedFrom && date < dateSelectedTo) {
-    selection = 'between';
-  }
-  if (interactive && dateSelectedFrom && date.equals(dateSelectedFrom)) {
-    selection = hasSelectionRange ? 'from' : 'incomplete';
-  }
-  if (interactive && dateSelectedTo && date.equals(dateSelectedTo)) {
-    selection = hasSelectionRange ? 'to' : 'incomplete';
+
+  const range = useCalendarDayRange({
+    currentDisabledRange,
+    date,
+    dateSelectedFrom,
+    dateSelectedTo,
+    interactive,
+  });
+
+  const style = useCalendarDayStyle({
+    isToday,
+    isCurrentMonth,
+    range: currentDisabledRange,
+  });
+
+  const recipe = useSlotRecipe({ recipe: datePickerDayRecipe });
+  const styles = recipe({
+    range,
+    style,
+  });
+
+  const dayInMonthNumber = useCalendarDayInMonthNumber({
+    datePickerGridIndex,
+    currentMonthStartsAtDayOfWeek,
+    currentMonthDaysInMonth,
+    daysInPreviousMonth,
+    isPreviousMonth,
+    isCurrentMonth,
+    isNextMonth,
+  });
+
+  const customProps: Record<string, unknown> = {};
+
+  if (range) {
+    customProps['data-range'] = range;
   }
 
-  const onClick = useCallback(() => {
-    if (!isSelectable) {
-      return;
-    }
-    onSelect(date);
-    if (isPreviousMonth) {
-      onPreviousMonth();
-    } else if (isNextMonth) {
-      onNextMonth();
-    }
-  }, [isPreviousMonth, isSelectable, onSelect, date, onPreviousMonth, onNextMonth]);
-  const onMouseEnter = useCallback(() => {
-    if (isSelectable) {
-      onPreview(date);
-    }
-  }, [onSelect, isSelectable, date]);
+  if (style) {
+    customProps['data-style'] = style;
+  }
+
+  // Add group identifier if the day belongs to a disabled range
+  if (currentDisabledRange) {
+    customProps['data-group'] =
+      `group-${currentDisabledRange.from?.toISODate()}-${currentDisabledRange.to?.toISODate()}`;
+  }
+
+  // Group hover handlers
+  const handleGroupHover = (enter: boolean) => {
+    if (!currentDisabledRange) return;
+
+    const groupId = `group-${currentDisabledRange.from?.toISODate()}-${currentDisabledRange.to?.toISODate()}`;
+    const groupElements = document.querySelectorAll(`[data-group="${groupId}"]`);
+
+    groupElements.forEach((element) => {
+      if (enter) {
+        element.classList.add('group-hover');
+      } else {
+        element.classList.remove('group-hover');
+      }
+    });
+  };
+
+  customProps['aria-selected'] = Boolean(range);
 
   if (isNextMonth && !showOutsideDays) {
     return null;
@@ -157,23 +135,25 @@ const DatePickerDay = ({ n }: { n: number }) => {
   if (isPreviousMonth && !showOutsideDays) {
     return <div />;
   }
+
   return (
-    <DatePickerDayView
-      currentMonth={isCurrentMonth}
-      date={date}
-      onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      preview={preview}
-      selectable={isSelectable}
-      selection={selection}
-      showOutsideDays={showOutsideDays}
-      today={today.equals(viewDate.set({ day: n - dayOfWeek + 1 }).startOf('day'))}
-      tooltip={dayTooltip}
+    <Box
+      asChild
+      css={styles.day}
+      disabled={!isSelectable && !currentDisabledRange?.editable}
+      onClick={() => isSelectable && onSelect(date)}
+      onFocus={() => isSelectable && onPreview(date)}
+      onMouseEnter={() => {
+        if (isSelectable) onPreview(date);
+        handleGroupHover(true);
+      }}
+      onMouseLeave={() => handleGroupHover(false)}
+      role="option"
     >
-      {isPreviousMonth && daysInPreviousMonth - (dayOfWeek - n - 1)}
-      {isCurrentMonth && n - dayOfWeek + 1}
-      {isNextMonth && n - dayOfWeek - daysInMonth + 1}
-    </DatePickerDayView>
+      <button type="button" {...customProps}>
+        <Text css={styles.text}>{dayInMonthNumber}</Text>
+      </button>
+    </Box>
   );
 };
 
