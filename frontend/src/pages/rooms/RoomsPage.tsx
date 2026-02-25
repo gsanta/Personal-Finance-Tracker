@@ -13,6 +13,7 @@ import { Controller, FormProvider, useForm } from 'react-hook-form';
 import CatInputList from './components/CatInputList';
 import { DateRange } from '@/lib/DatePicker/types/DatePicker.types';
 import { createDateRange } from '@/lib/DatePicker/hooks/useSelection';
+import { getFieldErrorMessage } from '@/utils/validation';
 
 type RoomsPageProps = {
   bookings: Booking[];
@@ -20,7 +21,7 @@ type RoomsPageProps = {
 };
 
 export type BookingForm = {
-  catNames: {
+  cats: {
     name: string;
   }[];
   notes: string;
@@ -37,7 +38,7 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
 
   const methods = useForm<BookingForm>({
     defaultValues: {
-      catNames: [{ name: '' }],
+      cats: [{ name: '' }],
       notes: '',
       foodFromOwner: false,
       range: undefined,
@@ -45,7 +46,7 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
     },
   });
 
-  const { control, handleSubmit, register, reset, watch } = methods;
+  const { control, formState, handleSubmit, register, reset, setError, watch } = methods;
 
   const selectedRoomId = watch('roomId');
 
@@ -77,6 +78,20 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
 
   const { createBooking, createBookingError, isCreateBookingLoading, isCreateBookingSuccess } = useBookRoom();
 
+  useEffect(() => {
+    if (createBookingError) {
+      const filedError = createBookingError.response?.data?.errors?.['cats'];
+      if (filedError) {
+        setError('cats', {
+          type: 'manual',
+          message: getFieldErrorMessage(filedError),
+        });
+      }
+    }
+  }, [createBookingError, reset]);
+
+  console.log(formState.errors);
+
   const handleCreateBooking = handleSubmit((data: BookingForm) => {
     if (selectedRoomId && data.range?.from && data.range?.to) {
       createBooking({
@@ -85,7 +100,7 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
         notes: data.notes,
         roomId: selectedRoomId,
         startDate: data.range.from.startOf('day').toISO(),
-        cats: data.catNames.filter((cat) => cat.name.trim() !== '').map((cat) => cat.name),
+        cats: data.cats.filter((cat) => cat.name.trim() !== '').map((cat) => cat.name),
       });
     }
   });
@@ -170,13 +185,6 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
                 )}
               />
               <Textarea placeholder="Egyéb megjegyzés..." {...register('notes')} />
-
-              {isCreateBookingSuccess && (
-                <Alert.Root status="success">
-                  <Alert.Indicator />
-                  <Alert.Title>Sikeres foglalás</Alert.Title>
-                </Alert.Root>
-              )}
             </Box>
             <Box
               ref={buttonGroupRef}
@@ -192,6 +200,12 @@ const RoomsPage = ({ bookings, rooms }: RoomsPageProps) => {
               paddingInline="{sizes.12}"
               paddingBlock="{sizes.12}"
             >
+              {isCreateBookingSuccess && (
+                <Alert.Root marginBottom="{sizes.16}" status="success" variant="outline">
+                  <Alert.Indicator />
+                  <Alert.Title>Sikeres foglalás</Alert.Title>
+                </Alert.Root>
+              )}
               <ButtonGroup>
                 <Button colorPalette="brand" onClick={() => reset()} variant="subtle">
                   {t('clear')}

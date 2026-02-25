@@ -1,17 +1,24 @@
 import axios from 'axios';
 import flatten from 'lodash/flatten';
-import { camelCaseKeys } from './transformKeys';
+import { camelCaseKeys, snakeCaseKeys } from './transformKeys';
 
 export const transformResponse = flatten([axios.defaults.transformResponse || [], camelCaseKeys]);
-// const transformRequest = flatten([snakeCaseKeys, axios.defaults.transformRequest || []]);
+const transformRequest = flatten([snakeCaseKeys, axios.defaults.transformRequest || []]);
+
+// Function to get CSRF token from meta tag
+const getCSRFToken = (): string => {
+  const metaTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+  return metaTag ? metaTag.content : '';
+};
 
 export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    'X-CSRFToken': getCSRFToken(),
   },
   transformResponse,
-  // transformRequest,
+  transformRequest,
 });
 
 type Config = {
@@ -56,16 +63,16 @@ export const monthlySummaryPath = (config?: Config): string => {
   return pathWithConfig('/api/summary/monthly', config);
 };
 
-export const registerPath = '/api/auth/register';
+export const registerPath = '/api/auth/register/';
 
-export const loginPath = '/auth/local/login';
+export const loginPath = '/api/auth/login/';
 
-export const logoutPath = '/auth/logout';
+export const logoutPath = '/api/auth/logout/';
 
 export const mediaUploadPath = '/api/media/upload-url';
 
 export const mediaFinalizeUploadPath = '/api/media/upload-finalize';
 
-export const bookingsPath = '/api/bookings';
+export const bookingsPath = '/api/bookings/';
 
 export const getMediaAssetPath = (id: string) => `/api/media/${id}`;

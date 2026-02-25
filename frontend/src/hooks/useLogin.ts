@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import useGlobalProps from './useGlobalProps';
 
 type RegisterRequest = {
-  user: string;
-  passwd: string;
+  email: string;
+  password: string;
 };
 
 type RegisterResponse = {
@@ -51,7 +51,7 @@ const useLogin = ({ onClose }: UseLoginProps) => {
 
   const onSubmit = async ({ email, password }: LoginFormData) => {
     try {
-      await loginUser({ user: email, passwd: password });
+      await loginUser({ email, password });
       onClose();
     } catch {
       // stop propagation

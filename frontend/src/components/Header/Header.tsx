@@ -30,7 +30,7 @@ const Header = () => {
       <Box
         as="header"
         bg={isPageScrolled ? 'orange.solid' : 'transparent'}
-        h="40"
+        h="{sizes.48}"
         shadow={isPageScrolled ? 'md' : 'none'}
         position="sticky"
         top="0"
@@ -55,9 +55,18 @@ const Header = () => {
             </Button>
             <Box display="flex" gap="4">
               {user ? (
-                <Button colorPalette="yellow" onClick={() => logout()} variant="solid">
-                  Logout
-                </Button>
+                <>
+                  <Button asChild colorPalette="orange" variant="ghost">
+                    <a href="profile">
+                      <Text color={textColor} textStyle="3xl" textTransform="uppercase">
+                        {t('fragments.header.profile_link')}
+                      </Text>
+                    </a>
+                  </Button>
+                  <Button colorPalette="yellow" onClick={() => logout()} variant="solid">
+                    Logout
+                  </Button>
+                </>
               ) : (
                 <>
                   <LoginDialog />

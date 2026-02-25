@@ -13,6 +13,7 @@ func HomeHandler(c *gin.Context) {
 
 	// Start with handler-specific props
 	pageProps := map[string]interface{}{
+		user: nil
 		// Add any home-specific fields here
 	}
 

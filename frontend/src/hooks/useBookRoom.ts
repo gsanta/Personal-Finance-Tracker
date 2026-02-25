@@ -1,5 +1,7 @@
+import GeneralError from '@/types/GeneralError';
 import { api, bookingsPath } from '@/utils/apiRoutes';
 import { useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
 type BookingsRequest = {
   cats?: string[];
@@ -16,7 +18,7 @@ const useBookRoom = () => {
     isPending,
     isSuccess,
     mutateAsync: createBooking,
-  } = useMutation<unknown, unknown, BookingsRequest>({
+  } = useMutation<unknown, AxiosError<GeneralError>, BookingsRequest>({
     mutationFn: async (data) => {
       return api.post(bookingsPath, data);
     },

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { DateRange } from '../types/DatePicker.types';
 
 type UseCalendarDayStyleParams = {
@@ -12,21 +11,19 @@ const useCalendarDayStyle = ({
   isCurrentMonth,
   range,
 }: UseCalendarDayStyleParams): undefined | 'deletable' | 'n/a' | 'today' => {
-  return useMemo(() => {
-    if (range?.editable) {
-      return 'deletable';
-    }
+  if (range?.editable) {
+    return 'deletable';
+  }
 
-    if (isToday) {
-      return 'today';
-    }
+  if (isToday) {
+    return 'today';
+  }
 
-    if (!isCurrentMonth) {
-      return 'n/a';
-    }
+  if (!isCurrentMonth) {
+    return 'n/a';
+  }
 
-    return undefined;
-  }, [isToday, isCurrentMonth]);
+  return undefined;
 };
 
 export default useCalendarDayStyle;

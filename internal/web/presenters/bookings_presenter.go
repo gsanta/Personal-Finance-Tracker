@@ -12,6 +12,7 @@ type BookingPresenter struct {
 	RoomId        string `json:"roomId"`
 	UserId        string `json:"userId"`
 	IsCurrentUser bool   `json:"isCurrentUser"`
+	Cancelable    bool   `json:"cancelable"`
 }
 
 // NewBookingPresenter converts a db.Booking to a BookingPresenter and
@@ -30,6 +31,7 @@ func NewBookingPresenter(b db.Booking, currentUserID string) BookingPresenter {
 		StartDate:     b.StartDate,
 		RoomId:        b.RoomId,
 		UserId:        userID,
+		Cancelable:    false,
 	}
 }
 

@@ -7,23 +7,27 @@ type CatNameInputProps = {
   onChange: (value: string) => void;
   onDelete: () => void;
   value: string;
+  error?: string;
 };
 
-const CatNameInput = ({ onChange, onDelete, value }: CatNameInputProps) => {
+const CatNameInput = ({ onChange, onDelete, value, error }: CatNameInputProps) => {
   return (
-    <Box display="flex" gap="4" alignItems="flex-end">
-      <Field.Root>
-        <Input
-          colorPalette="brand"
-          variant="subtle"
-          placeholder="Add meg a cica nevét"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </Field.Root>
-      <IconButton size="md" colorPalette="brand" variant="subtle" onClick={onDelete}>
-        <BiTrashAlt />
-      </IconButton>
+    <Box display="flex" flexDirection="column" gap="2">
+      <Box display="flex" gap="4" alignItems="flex-end">
+        <Field.Root flex="1" invalid={!!error}>
+          <Input
+            colorPalette="brand"
+            variant="subtle"
+            placeholder="Add meg a cica nevét"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {error && <Field.ErrorText>{error}</Field.ErrorText>}
+        </Field.Root>
+        <IconButton size="md" colorPalette="brand" variant="subtle" onClick={onDelete}>
+          <BiTrashAlt />
+        </IconButton>
+      </Box>
     </Box>
   );
 };
@@ -33,7 +37,14 @@ const CatInputList = () => {
 
   const { fields, append, remove } = useFieldArray<BookingForm>({
     control,
-    name: 'catNames',
+    name: 'cats',
+    rules: {
+      required: 'Legalább egy vendég neve kötelező',
+      minLength: {
+        value: 1,
+        message: 'Legalább egy vendég neve kötelező',
+      },
+    },
   });
 
   return (
@@ -42,19 +53,23 @@ const CatInputList = () => {
       <Box display="flex" flexDirection="column" gap="4">
         {fields.map((field, index) => (
           <Controller
-            name={`catNames.${index}.name`}
+            name={`cats.${index}.name`}
             key={field.id}
-            render={({ field }) => (
-              <CatNameInput
-                value={field.value}
-                onChange={field.onChange}
-                onDelete={() => {
-                  if (fields.length > 1) {
-                    remove(index);
-                  }
-                }}
-              />
-            )}
+            control={control}
+            render={({ field, fieldState, formState }) => {
+              return (
+                <CatNameInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  onDelete={() => {
+                    if (fields.length > 1) {
+                      remove(index);
+                    }
+                  }}
+                  error={fieldState.error?.message || formState.errors.cats?.message}
+                />
+              );
+            }}
           />
         ))}
       </Box>

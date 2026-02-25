@@ -5,12 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/auth"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/db"
-	pubsubinit "github.com/gsanta/Personal-Finance-Tracker/internal/pubsub"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/storage"
 	"github.com/gsanta/Personal-Finance-Tracker/internal/web"
 	handlers "github.com/gsanta/Personal-Finance-Tracker/internal/web/handlers"
@@ -37,22 +35,22 @@ func main() {
 	defer gcsService.Close()
 
 	// pubsub (increase timeout for emulator readiness)
-	startCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	cfg := pubsubinit.LoadConfig()
-	log.Printf("[pubsub-init] PROJECT_ID=%s topic=%s sub=%s emulator_host=%s", os.Getenv("PROJECT_ID"), cfg.TopicID, cfg.SubscriptionID, os.Getenv("PUBSUB_EMULATOR_HOST"))
-	resources, err := pubsubinit.EnsurePubSub(startCtx, cfg)
-
-	uploadSubscriber := pubsubinit.NewMediaUploadedSubscriber(db.DB, resources)
-
-	if err != nil {
-		log.Fatalf("pubsub init failed: %v", err)
-	}
-	log.Printf("[pubsub-init] client ready, starting subscriber")
-	defer resources.Client.Close()
-	cancelSub := uploadSubscriber.StartSubscriber(context.Background())
-	defer cancelSub()
+	//startCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	//defer cancel()
+	//
+	//cfg := pubsubinit.LoadConfig()
+	//log.Printf("[pubsub-init] PROJECT_ID=%s topic=%s sub=%s emulator_host=%s", os.Getenv("PROJECT_ID"), cfg.TopicID, cfg.SubscriptionID, os.Getenv("PUBSUB_EMULATOR_HOST"))
+	//resources, err := pubsubinit.EnsurePubSub(startCtx, cfg)
+	//
+	//uploadSubscriber := pubsubinit.NewMediaUploadedSubscriber(db.DB, resources)
+	//
+	//if err != nil {
+	//	log.Fatalf("pubsub init failed: %v", err)
+	//}
+	//log.Printf("[pubsub-init] client ready, starting subscriber")
+	//defer resources.Client.Close()
+	//cancelSub := uploadSubscriber.StartSubscriber(context.Background())
+	//defer cancelSub()
 
 	// router (gin)
 	gin.SetMode(gin.ReleaseMode)
@@ -100,6 +98,7 @@ func main() {
 
 	mediaHandler := api.NewMediaHandler(db.DB, bucketName, gcsService)
 	bookingsHandler := api.NewBookingsHandler(db.DB)
+	userHandler := api.NewUserdHandler(db.DB)
 
 	// param route
 	r.GET("/api/media/:id", func(c *gin.Context) {
@@ -109,6 +108,12 @@ func main() {
 	r.POST("/api/media/upload-url", gin.WrapF(mediaHandler.GenerateUploadURL))
 	r.POST("/api/media/upload-finalize", gin.WrapF(mediaHandler.FinalizeUploadMediaAsset))
 	r.POST("/api/bookings", routeAuthInfo.Protected(bookingsHandler.CreateBooking))
+	// current user's bookings with pagination
+	r.GET("/api/bookings/me", routeAuthInfo.Protected(bookingsHandler.ListMyBookings))
+	// delete a booking
+	r.DELETE("/api/bookings/:id", routeAuthInfo.Protected(bookingsHandler.DeleteBooking))
+	// change password
+	r.POST("/api/user/password", routeAuthInfo.Protected(userHandler.UpdatePassword))
 
 	port := os.Getenv("PORT")
 	if port == "" {
